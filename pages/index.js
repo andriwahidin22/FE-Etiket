@@ -1,147 +1,108 @@
 import { useState, useEffect } from "react";
 import Head from "next/head";
+import { FaTicketAlt, FaPlay } from "react-icons/fa";
+import MuseumHeader from "./components/MuseumHeader";
+import BuyTicketButton from "./components/BuyTicketButton";
 
 export default function Home() {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isScrolled, setIsScrolled] = useState(false);
-
-  const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
-
-  const handleScroll = () => {
-    setIsScrolled(window.scrollY > 0);
-  };
+  const [videoLoaded, setVideoLoaded] = useState(false);
+  const [showFallback, setShowFallback] = useState(true);
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+    // Deteksi perangkat mobile
+    setIsMobile(/iPhone|iPad|iPod|Android/i.test(navigator.userAgent));
+    
+    // Timeout fallback untuk desktop
+    if (!isMobile) {
+      const timer = setTimeout(() => {
+        setShowFallback(false);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [isMobile]);
+
+  // Video ID Museum Lampung
+  const youtubeVideoId = "gR8kj6ti-s4";
+  
+  // Format URL yang benar dengan parameter penting
+  const embedUrl = `https://www.youtube-nocookie.com/embed/${youtubeVideoId}?rel=0&modestbranding=1`;
+
+  const handlePlayVideo = () => {
+    setVideoLoaded(true);
+    setShowFallback(false);
+  };
 
   return (
     <>
       <Head>
-        <meta charSet="utf-8" />
-        <meta content="width=device-width, initial-scale=1" name="viewport" />
-        <title>Museum Lampung - Keajaiban Budaya di Sumatera Selatan</title>
-        <link
-          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"
-          rel="stylesheet"
-        />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap"
-          rel="stylesheet"
+        <title>Museum Lampung - Ruwai Jurai</title>
+        {/* Tambahkan CSP meta tag */}
+        <meta 
+          httpEquiv="Content-Security-Policy" 
+          content="frame-src https://www.youtube-nocookie.com" 
         />
       </Head>
 
-      <body className="relative bg-white text-gray-800">
-        <header
-          className={`fixed top-0 left-0 w-full z-40 transition-all duration-300 ${
-            isScrolled ? "bg-black bg-opacity-90" : "bg-transparent"
-          }`}
-        >
-          <nav className="max-w-[1200px] mx-auto flex items-center justify-between px-8 py-4 text-[16px] font-normal">
-            <div className="flex items-center space-x-10">
-              <div className="flex flex-col leading-none">
-                <span
-                  className={`text-[18px] font-light tracking-wide select-none ${
-                    isScrolled ? "text-white" : "text-black"
-                  }`}
-                >
-                  lampungheritage
-                </span>
-                <span
-                  className={`text-[10px] font-semibold tracking-widest select-none ${
-                    isScrolled ? "text-white" : "text-black"
-                  }`}
-                >
-                  CULTURE & HISTORY EXPERIENCE
-                </span>
-              </div>
-              <ul className="hidden md:flex space-x-10 font-normal">
-                <li>
-                  <a
-                    className={`relative inline-block pb-1 font-semibold ${
-                      isScrolled
-                        ? "text-white hover:text-[#7C4A00]"
-                        : "text-black hover:text-[#7C4A00]"
-                    }`}
-                    href="#"
-                  >
-                    Beranda
-                    <span className="absolute bottom-0 left-0 w-full h-[2px] bg-[#7C4A00] rounded"></span>
-                  </a>
-                </li>
-                {[
-                  "Destinasi Info",
-                  "Sejarah",
-                  "Venue",
-                  "Galery",
-                  "Contact",
-                ].map((text) => (
-                  <li key={text}>
-                    <a
-                      className={`hover:text-[#7C4A00] ${
-                        isScrolled ? "text-white" : "text-black"
-                      }`}
-                      href={`#${text.toLowerCase()}`}
-                    >
-                      {text}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div className="hidden md:flex items-center space-x-6">
-              <button
-                className={`border rounded-full px-6 py-2 text-sm font-semibold transition ${
-                  isScrolled
-                    ? "text-white border-white hover:bg-white hover:text-[#7C4A00]"
-                    : "text-black border-black hover:bg-black hover:text-white"
-                }`}
-              >
-                Masuk
-              </button>
-              <button
-                className={`rounded-full px-6 py-2 text-sm font-semibold transition
-    ${
-      isScrolled
-        ? "text-[#7C4A00] bg-white border border-[#7C4A00] hover:bg-[#f2e5d5] active:bg-[#7C4A00] active:text-white"
-        : "text-[#7C4A00] bg-white border border-[#7C4A00] hover:bg-[#f2e5d5] active:bg-[#7C4A00] active:text-white"
-    }`}
-              >
-                Daftar
-              </button>
-            </div>
-            <div className="md:hidden flex items-center">
-              <button
-                onClick={toggleMenu}
-                className={`${
-                  isScrolled ? "text-white" : "text-black"
-                } focus:outline-none`}
-              >
-                <i className="fas fa-bars"></i>
-              </button>
-            </div>
-          </nav>
-        </header>
+      <div className="relative bg-white text-gray-800">
+        {/*Header*/}
+        <MuseumHeader />
 
-        <main className="pt-20">
-          <img
-            alt="Front view of Museum Lampung building with traditional architecture and surrounding greenery under a clear sky"
-            className="w-full h-[600px] object-cover brightness-[0.55]"
-            src="https://storage.googleapis.com/a1aa/image/751e5f1e-e16b-4ec2-ff12-da02dedd1bfd.jpg"
-          />
-          <div
-            className="absolute top-0 left-0 w-full h-[600px] flex flex-col justify-center max-w-[1200px] mx-auto px-6 md:px-12"
-            style={{ pointerEvents: "none" }}
-          >
-            <h1 className="text-white text-4xl md:text-5xl font-semibold leading-tight max-w-4xl">
-              Museum Lampung - Keajaiban Budaya di Sumatera Selatan
-            </h1>
-            <button className="mt-6 w-max bg-white text-[#7C4A00] text-sm font-semibold rounded-full px-5 py-2 cursor-pointer pointer-events-auto hover:bg-gray-100 transition">
-              Jelajahi Sekarang
-            </button>
+        <main className="pt-20 relative">
+          {/* Video Container */}
+          <div className="w-full h-[600px] overflow-hidden relative bg-black">
+            
+            {/* Fallback Image (Mobile & Sebelum Video Load) */}
+            {showFallback && (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <img
+                  src={`https://img.youtube.com/vi/${youtubeVideoId}/maxresdefault.jpg`}
+                  alt="Pratinjau Museum Lampung"
+                  className="absolute inset-0 w-full h-full object-cover brightness-[0.7]"
+                />
+                <button 
+                  onClick={handlePlayVideo}
+                  className="relative z-10 w-20 h-20 bg-red-600 rounded-full flex items-center justify-center hover:bg-red-700 transition transform hover:scale-110"
+                  aria-label="Putar Video"
+                >
+                  <FaPlay className="text-white text-2xl ml-1" />
+                </button>
+              </div>
+            )}
+
+            {/* YouTube Video */}
+            {(!showFallback || !isMobile) && (
+              <div className={`absolute inset-0 w-full h-full ${videoLoaded ? 'opacity-100' : 'opacity-0'}`}>
+                <iframe
+                  src={videoLoaded ? `${embedUrl}&autoplay=1&mute=1` : embedUrl}
+                  className="w-full h-full"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  frameBorder="0"
+                  loading="eager"
+                  onLoad={() => setVideoLoaded(true)}
+                />
+              </div>
+            )}
+
+            {/* Overlay Gelap */}
+            <div className="absolute inset-0 bg-black bg-opacity-30"></div>
+
+            {/* Konten Teks */}
+            <div className="absolute inset-0 flex flex-col justify-center max-w-[1200px] mx-auto px-6 md:px-12 z-10">
+              <h1 className="text-white text-4xl md:text-5xl font-semibold leading-tight max-w-4xl drop-shadow-lg">
+                Museum Lampung - Sang Bumi Ruwai Jurai
+              </h1>
+              <button
+                className="mt-6 w-max bg-white text-[#7C4A00] text-sm font-semibold rounded-full px-5 py-2 hover:bg-gray-100 transition shadow-lg"
+                onClick={() => (window.location.href = "/tours")}
+              >
+                Jelajahi Sekarang
+              </button>
+            </div>
           </div>
         </main>
+
         <section className="max-w-[1200px] mx-auto px-6 md:px-12 py-16">
           <h2 className="text-3xl font-semibold text-center mb-10 text-gray-900">
             Tentang Museum Lampung
@@ -154,6 +115,7 @@ export default function Home() {
             sekarang.
           </p>
         </section>
+
         <section className="bg-gray-50 py-16">
           <div className="max-w-[1200px] mx-auto px-6 md:px-12">
             <h2 className="text-3xl font-semibold text-center mb-12 text-gray-900">
@@ -217,6 +179,7 @@ export default function Home() {
             </div>
           </div>
         </section>
+
         <section className="max-w-[1200px] mx-auto px-6 md:px-12 py-16">
           <h2 className="text-3xl font-semibold text-center mb-10 text-gray-900">
             Kunjungi Museum Lampung
@@ -235,6 +198,7 @@ export default function Home() {
             </a>
           </div>
         </section>
+
         <section id="contact" className="bg-gray-50 py-16">
           <div className="max-w-[1200px] mx-auto px-6 md:px-12">
             <h2 className="text-3xl font-semibold text-center mb-10 text-gray-900">
@@ -302,23 +266,90 @@ export default function Home() {
             </form>
           </div>
         </section>
-        <footer className="bg-gray-900 text-gray-300 py-8 mt-16">
-          <div className="max-w-[1200px] mx-auto px-6 md:px-12 flex flex-col md:flex-row justify-between items-center text-sm">
-            <p>© 2024 Museum Lampung. All rights reserved.</p>
-            <div className="flex space-x-6 mt-4 md:mt-0">
-              <a aria-label="Facebook" className="hover:text-white" href="#">
-                <i className="fab fa-facebook-f text-lg"></i>
-              </a>
-              <a aria-label="Twitter" className="hover:text-white" href="#">
-                <i className="fab fa-twitter text-lg"></i>
-              </a>
-              <a aria-label="Instagram" className="hover:text-white" href="#">
-                <i className="fab fa-instagram text-lg"></i>
-              </a>
+
+        {/*batom buy*/}
+        <BuyTicketButton/>
+
+        <footer className="bg-[#f9f9f9] border-t border-gray-300 mt-20 pt-10 pb-4 relative">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row md:items-center md:justify-between space-y-6 md:space-y-0">
+            <div className="flex items-center space-x-10">
+              <img
+                src="https://storage.googleapis.com/a1aa/image/353a668a-bcd1-4a0e-e1cd-6b11314b6da3.jpg"
+                alt="BUMN logo"
+                className="h-10 w-auto"
+                loading="lazy"
+              />
+              <div className="border-l border-gray-300 h-10"></div>
+              <img
+                src="https://storage.googleapis.com/a1aa/image/1337f648-de50-4122-aba4-99a4f8af343a.jpg"
+                alt="InJourney logo"
+                className="h-10 w-auto"
+                loading="lazy"
+              />
+            </div>
+
+            <div className="flex space-x-4 text-[#a3b04a] text-lg">
+              {[
+                "instagram",
+                "facebook-f",
+                "twitter",
+                "linkedin-in",
+                "youtube",
+                "tiktok",
+              ].map((icon) => (
+                <a
+                  key={icon}
+                  href="#"
+                  className="hover:text-[#8a9a3a]"
+                  aria-label={icon}
+                >
+                  <i className={`fab fa-${icon}`} />
+                </a>
+              ))}
             </div>
           </div>
+
+          <nav className="max-w-7xl mx-auto mt-6 px-4 sm:px-6 lg:px-8 text-center text-xs text-gray-600 space-x-4">
+            {[
+              "Beranda",
+              "Destination Info",
+              "Experiences",
+              "Venues",
+              "Agenda",
+              "News",
+              "Brosur",
+            ].map((item) => (
+              <a key={item} href="#" className="hover:text-gray-900">
+                {item}
+              </a>
+            ))}
+          </nav>
+
+          <div className="max-w-7xl mx-auto mt-6 px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-3 gap-6 text-xs text-gray-700">
+            <div>
+              <p className="font-semibold mb-1">Contact Us</p>
+              <p>info@museumlampung.id</p>
+            </div>
+            <div>
+              <p className="font-semibold mb-1">Head Office Address</p>
+              <p>Jl. Pangeran Antasari No. 8, Bandar Lampung, Lampung 35131</p>
+            </div>
+            <div>
+              <p className="font-semibold mb-1">
+                Representative Office Address
+              </p>
+              <p>
+                Kantor Gedung Pengelola TMII Lt. 3 Jl. Raya Taman Mini, Jakarta
+                Timur 13560
+              </p>
+            </div>
+          </div>
+
+          <div className="bg-[#a3b04a] text-white text-xs text-center py-2 mt-10">
+            Museum Lampung © 2025. All Rights Reserved
+          </div>
         </footer>
-      </body>
+      </div>
     </>
   );
 }

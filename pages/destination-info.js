@@ -1,9 +1,10 @@
 // pages/index.js
 
 import { useState, useEffect } from "react";
-import Head from "next/head";
 import Image from "next/image";
 import { FaArrowRight, FaCheckCircle, FaTicketAlt } from "react-icons/fa";
+import BuyTicketButton from "../pages/components/BuyTicketButton";
+import MuseumHeader from "./components/MuseumHeader";
 
 export default function Home() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -23,110 +24,24 @@ export default function Home() {
   return (
     <>
       <div className="relative bg-white text-gray-800">
+
         {/* Header */}
-        <header
-          className={`fixed top-0 left-0 w-full z-40 transition-all duration-300 ${
-            isScrolled ? "bg-black bg-opacity-90" : "bg-transparent"
-          }`}
-        >
-          <nav className="max-w-[1200px] mx-auto flex items-center justify-between px-8 py-4 text-[16px] font-normal">
-            <div className="flex items-center space-x-10">
-              <div className="flex flex-col leading-none">
-                <span
-                  className={`text-[18px] font-light tracking-wide select-none ${
-                    isScrolled ? "text-white" : "text-black"
-                  }`}
-                >
-                  lampungheritage
-                </span>
-                <span
-                  className={`text-[10px] font-semibold tracking-widest select-none ${
-                    isScrolled ? "text-white" : "text-black"
-                  }`}
-                >
-                  CULTURE & HISTORY EXPERIENCE
-                </span>
-              </div>
-              <ul className="hidden md:flex space-x-10 font-normal">
-                <li>
-                  <a
-                    className={`relative inline-block pb-1 font-semibold ${
-                      isScrolled
-                        ? "text-white hover:text-[#7C4A00]"
-                        : "text-black hover:text-[#7C4A00]"
-                    }`}
-                    href="#"
-                  >
-                    Beranda
-                    <span className="absolute bottom-0 left-0 w-full h-[2px] bg-[#7C4A00] rounded"></span>
-                  </a>
-                </li>
-                {[
-                  "Destinasi Info",
-                  "Sejarah",
-                  "Venue",
-                  "Galery",
-                  "Contact",
-                ].map((text) => (
-                  <li key={text}>
-                    <a
-                      className={`hover:text-[#7C4A00] ${
-                        isScrolled ? "text-white" : "text-black"
-                      }`}
-                      href={`#${text.toLowerCase()}`}
-                    >
-                      {text}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div className="hidden md:flex items-center space-x-6">
-              <button
-                className={`border rounded-full px-6 py-2 text-sm font-semibold transition ${
-                  isScrolled
-                    ? "text-white border-white hover:bg-white hover:text-[#7C4A00]"
-                    : "text-black border-black hover:bg-black hover:text-white"
-                }`}
-              >
-                Masuk
-              </button>
-              <button
-                className={`rounded-full px-6 py-2 text-sm font-semibold transition ${
-                  isScrolled
-                    ? "text-[#7C4A00] bg-white border border-[#7C4A00] hover:bg-[#f2e5d5] active:bg-[#7C4A00] active:text-white"
-                    : "text-[#7C4A00] bg-white border border-[#7C4A00] hover:bg-[#f2e5d5] active:bg-[#7C4A00] active:text-white"
-                }`}
-              >
-                Daftar
-              </button>
-            </div>
-            <div className="md:hidden flex items-center">
-              <button
-                onClick={toggleMenu}
-                className={`${
-                  isScrolled ? "text-white" : "text-black"
-                } focus:outline-none`}
-              >
-                <i className="fas fa-bars"></i>
-              </button>
-            </div>
-          </nav>
-        </header>
+        <MuseumHeader/>
 
         <main className="pt-20">
-          <img
-            alt="Front view of Museum Lampung building with traditional architecture and surrounding greenery under a clear sky"
-            className="w-full h-[300px] object-cover brightness-[0.55]"
-            src="https://storage.googleapis.com/a1aa/image/751e5f1e-e16b-4ec2-ff12-da02dedd1bfd.jpg"
-          />
-          <div
-            className="absolute top-0 left-0 w-full h-[400px] flex flex-col justify-center max-w-[1200px] mx-auto px-6 md:px-12"
-            style={{ pointerEvents: "none" }}
-          >
-            <h1 className="text-white text-4xl md:text-5xl font-semibold leading-tight max-w-4xl">
-              Destination Info
-            </h1>
+          <div className="relative h-[400px]">
+            <Image
+              src="https://storage.googleapis.com/a1aa/image/751e5f1e-e16b-4ec2-ff12-da02dedd1bfd.jpg"
+              alt="Gedung Museum Lampung"
+              layout="fill"
+              objectFit="cover"
+              className="brightness-75"
+            />
+            <div className="absolute inset-0 flex items-center justify-center">
+              <h1 className="text-4xl md:text-5xl font-bold text-white text-center px-4">
+                Destination Info
+              </h1>
+            </div>
           </div>
         </main>
 
@@ -379,20 +294,12 @@ export default function Home() {
                 <Button text="Baca Selengkapnya" />
               </article>
             </section>
-
-            {/* Buy Ticket Button bottom right */}
-            <div className="fixed bottom-6 right-6">
-              <button
-                aria-label="Buy Ticket"
-                className="bg-[#a3b04a] text-white text-xs rounded-full py-2 px-4 flex items-center gap-2 hover:bg-[#8a9a3a] transition"
-              >
-                Buy Ticket
-                <FaTicketAlt />
-              </button>
-            </div>
           </main>
         </div>
+
       </div>
+
+      {/* Footer */}
       <footer className="bg-[#f9f9f9] border-t border-gray-300 mt-20 pt-10 pb-4 relative">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row md:items-center md:justify-between space-y-6 md:space-y-0">
           <div className="flex items-center space-x-10">
@@ -470,6 +377,8 @@ export default function Home() {
           Museum Lampung © 2025. All Rights Reserved
         </div>
       </footer>
+      <BuyTicketButton/>
+
     </>
   );
 }
