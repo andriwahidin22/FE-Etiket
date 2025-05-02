@@ -4,7 +4,9 @@ const nextConfig = {
     domains: [
       'storage.googleapis.com',
       'upload.wikimedia.org',
-      'images.unsplash.com' 
+      'images.unsplash.com',
+      'radartv.disway.id',
+      'img.youtube.com'
     ],
   },
 }

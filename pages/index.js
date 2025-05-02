@@ -1,19 +1,133 @@
+//page/index.js
+
 import { useState, useEffect } from "react";
 import Head from "next/head";
-import { FaTicketAlt, FaPlay } from "react-icons/fa";
+import { motion, AnimatePresence } from "framer-motion";
+import { FaTicketAlt, FaPlay, FaArrowRight, FaTimes } from "react-icons/fa";
 import MuseumHeader from "./components/MuseumHeader";
 import BuyTicketButton from "./components/BuyTicketButton";
+import RatingSystem from "./components/RatingSystem";
+
+
+// Data dummy untuk koleksi
+const dummyCollections = [
+  {
+    id: 1,
+    title: "Tenun Tapis",
+    year: "Abad 18",
+    shortDescription: "Kain tradisional Lampung dengan motif emas yang indah",
+    image: "https://storage.googleapis.com/a1aa/image/ebe59a5f-d698-4c6c-4265-156eb1cf22cf.jpg"
+  },
+  {
+    id: 2,
+    title: "Keris Kuno",
+    year: "Abad 15",
+    shortDescription: "Senjata tradisional dengan ukiran khas Lampung",
+    image: "https://storage.googleapis.com/a1aa/image/e22f4a53-e499-4b1d-6663-0e6affe4315f.jpg"
+  },
+  {
+    id: 3,
+    title: "Gong Gantung",
+    year: "Abad 17",
+    shortDescription: "Alat musik tradisional dari perunggu",
+    image: "https://storage.googleapis.com/a1aa/image/12f7d456-0096-4f51-d2ff-7f96fe98720b.jpg"
+  },
+  {
+    id: 4,
+    title: "Guci Keramik",
+    year: "Abad 16",
+    shortDescription: "Tempat penyimpanan dari tanah liat dengan motif kuno",
+    image: "https://storage.googleapis.com/a1aa/image/1337f648-de50-4122-aba4-99a4f8af343a.jpg"
+  }
+];
+
+// Komponen Modal untuk Koleksi
+function CollectionModal({ collection, onClose }) {
+  return (
+    <AnimatePresence>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
+        onClick={onClose}
+      >
+        <motion.div 
+          initial={{ y: 50, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          exit={{ y: 50, opacity: 0 }}
+          className="bg-white rounded-lg max-w-md w-full relative overflow-hidden"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <button 
+            onClick={onClose}
+            className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
+          >
+            <FaTimes size={20} />
+          </button>
+          
+          <img 
+            src={collection.image} 
+            alt={collection.title}
+            className="w-full h-48 object-cover"
+          />
+          
+          <div className="p-6">
+            <motion.h3 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.2 }}
+              className="text-2xl font-bold mb-2"
+            >
+              {collection.title}
+            </motion.h3>
+            
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.3 }}
+              className="text-gray-600 mb-4"
+            >
+              {collection.year}
+            </motion.p>
+            
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.4 }}
+              className="text-gray-700 mb-6"
+            >
+              {collection.shortDescription}
+            </motion.p>
+            
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.5 }}
+            >
+              <button
+                className="inline-flex items-center bg-[#7C4A00] text-white px-4 py-2 rounded hover:bg-[#5a3600] transition"
+                onClick={() => alert(`Akan mengarah ke detail koleksi ${collection.id}`)}
+              >
+                Baca Selengkapnya <FaArrowRight className="ml-2" />
+              </button>
+            </motion.div>
+          </div>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
+  );
+}
 
 export default function Home() {
   const [videoLoaded, setVideoLoaded] = useState(false);
   const [showFallback, setShowFallback] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
+  const [selectedCollection, setSelectedCollection] = useState(null);
 
   useEffect(() => {
-    // Deteksi perangkat mobile
     setIsMobile(/iPhone|iPad|iPod|Android/i.test(navigator.userAgent));
     
-    // Timeout fallback untuk desktop
     if (!isMobile) {
       const timer = setTimeout(() => {
         setShowFallback(false);
@@ -22,10 +136,7 @@ export default function Home() {
     }
   }, [isMobile]);
 
-  // Video ID Museum Lampung
   const youtubeVideoId = "gR8kj6ti-s4";
-  
-  // Format URL yang benar dengan parameter penting
   const embedUrl = `https://www.youtube-nocookie.com/embed/${youtubeVideoId}?rel=0&modestbranding=1`;
 
   const handlePlayVideo = () => {
@@ -37,7 +148,6 @@ export default function Home() {
     <>
       <Head>
         <title>Museum Lampung - Ruwai Jurai</title>
-        {/* Tambahkan CSP meta tag */}
         <meta 
           httpEquiv="Content-Security-Policy" 
           content="frame-src https://www.youtube-nocookie.com" 
@@ -45,14 +155,12 @@ export default function Home() {
       </Head>
 
       <div className="relative bg-white text-gray-800">
-        {/*Header*/}
+        {/* Header */}
         <MuseumHeader />
 
         <main className="pt-20 relative">
-          {/* Video Container */}
+          {/* Hero Section with Video */}
           <div className="w-full h-[600px] overflow-hidden relative bg-black">
-            
-            {/* Fallback Image (Mobile & Sebelum Video Load) */}
             {showFallback && (
               <div className="absolute inset-0 flex items-center justify-center">
                 <img
@@ -70,7 +178,6 @@ export default function Home() {
               </div>
             )}
 
-            {/* YouTube Video */}
             {(!showFallback || !isMobile) && (
               <div className={`absolute inset-0 w-full h-full ${videoLoaded ? 'opacity-100' : 'opacity-0'}`}>
                 <iframe
@@ -85,268 +192,263 @@ export default function Home() {
               </div>
             )}
 
-            {/* Overlay Gelap */}
             <div className="absolute inset-0 bg-black bg-opacity-30"></div>
 
-            {/* Konten Teks */}
             <div className="absolute inset-0 flex flex-col justify-center max-w-[1200px] mx-auto px-6 md:px-12 z-10">
               <h1 className="text-white text-4xl md:text-5xl font-semibold leading-tight max-w-4xl drop-shadow-lg">
                 Museum Lampung - Sang Bumi Ruwai Jurai
               </h1>
               <button
                 className="mt-6 w-max bg-white text-[#7C4A00] text-sm font-semibold rounded-full px-5 py-2 hover:bg-gray-100 transition shadow-lg"
-                onClick={() => (window.location.href = "/tours")}
+                onClick={() => alert("Akan mengarah ke halaman tur")}
               >
                 Jelajahi Sekarang
               </button>
             </div>
           </div>
-        </main>
 
-        <section className="max-w-[1200px] mx-auto px-6 md:px-12 py-16">
-          <h2 className="text-3xl font-semibold text-center mb-10 text-gray-900">
-            Tentang Museum Lampung
-          </h2>
-          <p className="max-w-4xl mx-auto text-center text-gray-700 text-lg leading-relaxed">
-            Museum Lampung adalah pusat kebudayaan dan sejarah yang menampilkan
-            kekayaan warisan budaya Lampung dan Sumatera Selatan. Museum ini
-            menyimpan koleksi artefak, seni tradisional, dan sejarah yang
-            menggambarkan kehidupan masyarakat Lampung dari masa lalu hingga
-            sekarang.
-          </p>
-        </section>
-
-        <section className="bg-gray-50 py-16">
-          <div className="max-w-[1200px] mx-auto px-6 md:px-12">
-            <h2 className="text-3xl font-semibold text-center mb-12 text-gray-900">
-              Koleksi Unggulan
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <div className="bg-white rounded-lg shadow-md overflow-hidden">
-                <img
-                  alt="Traditional Lampung woven fabric displayed in museum"
-                  className="w-full h-48 object-cover"
-                  height="400"
-                  src="https://storage.googleapis.com/a1aa/image/ebe59a5f-d698-4c6c-4265-156eb1cf22cf.jpg"
-                  width="600"
-                />
-                <div className="p-6">
-                  <h3 className="text-xl font-semibold mb-2 text-gray-900">
-                    Tenun Lampung
-                  </h3>
-                  <p className="text-gray-700 text-sm leading-relaxed">
-                    Koleksi kain tenun tradisional Lampung yang kaya motif dan
-                    warna, melambangkan identitas budaya masyarakat Lampung.
-                  </p>
-                </div>
-              </div>
-              <div className="bg-white rounded-lg shadow-md overflow-hidden">
-                <img
-                  alt="Ancient artifacts displayed in Museum Lampung"
-                  className="w-full h-48 object-cover"
-                  height="400"
-                  src="https://storage.googleapis.com/a1aa/image/e22f4a53-e499-4b1d-6663-0e6affe4315f.jpg"
-                  width="600"
-                />
-                <div className="p-6">
-                  <h3 className="text-xl font-semibold mb-2 text-gray-900">
-                    Artefak Sejarah
-                  </h3>
-                  <p className="text-gray-700 text-sm leading-relaxed">
-                    Berbagai artefak kuno yang menceritakan sejarah dan
-                    kehidupan masyarakat Lampung dari masa lampau.
-                  </p>
-                </div>
-              </div>
-              <div className="bg-white rounded-lg shadow-md overflow-hidden">
-                <img
-                  alt="Traditional Lampung musical instruments displayed in museum"
-                  className="w-full h-48 object-cover"
-                  height="400"
-                  src="https://storage.googleapis.com/a1aa/image/12f7d456-0096-4f51-d2ff-7f96fe98720b.jpg"
-                  width="600"
-                />
-                <div className="p-6">
-                  <h3 className="text-xl font-semibold mb-2 text-gray-900">
-                    Alat Musik Tradisional
-                  </h3>
-                  <p className="text-gray-700 text-sm leading-relaxed">
-                    Koleksi alat musik tradisional Lampung yang masih digunakan
-                    dalam upacara adat dan pertunjukan seni.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section className="max-w-[1200px] mx-auto px-6 md:px-12 py-16">
-          <h2 className="text-3xl font-semibold text-center mb-10 text-gray-900">
-            Kunjungi Museum Lampung
-          </h2>
-          <div className="max-w-3xl mx-auto text-center text-gray-700 text-lg leading-relaxed">
-            <p className="mb-6">
-              Museum Lampung buka setiap hari Selasa sampai Minggu, pukul 08.00
-              - 16.00 WIB. Nikmati tur edukatif dan berbagai pameran menarik
-              yang membawa Anda mengenal lebih dalam budaya Lampung.
-            </p>
-            <a
-              className="inline-block bg-[#7C4A00] hover:bg-[#5a3600] text-white font-semibold rounded-full px-8 py-3 transition"
-              href="#"
-            >
-              Pesan Tiket Sekarang
-            </a>
-          </div>
-        </section>
-
-        <section id="contact" className="bg-gray-50 py-16">
-          <div className="max-w-[1200px] mx-auto px-6 md:px-12">
-            <h2 className="text-3xl font-semibold text-center mb-10 text-gray-900">
-              Hubungi Kami
-            </h2>
-            <form
-              className="max-w-3xl mx-auto space-y-6"
-              action="#"
-              method="POST"
-            >
-              <div>
-                <label
-                  className="block mb-2 font-semibold text-gray-700"
-                  htmlFor="name"
-                >
-                  Nama
-                </label>
-                <input
-                  className="w-full border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#7C4A00]"
-                  id="name"
-                  name="name"
-                  placeholder="Masukkan nama Anda"
-                  required
-                  type="text"
-                />
-              </div>
-              <div>
-                <label
-                  className="block mb-2 font-semibold text-gray-700"
-                  htmlFor="email"
-                >
-                  Email
-                </label>
-                <input
-                  className="w-full border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#7C4A00]"
-                  id="email"
-                  name="email"
-                  placeholder="Masukkan email Anda"
-                  required
-                  type="email"
-                />
-              </div>
-              <div>
-                <label
-                  className="block mb-2 font-semibold text-gray-700"
-                  htmlFor="message"
-                >
-                  Pesan
-                </label>
-                <textarea
-                  className="w-full border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#7C4A00]"
-                  id="message"
-                  name="message"
-                  placeholder="Tulis pesan Anda"
-                  required
-                  rows="4"
-                ></textarea>
-              </div>
-              <button
-                className="bg-[#7C4A00] hover:bg-[#5a3600] text-white font -semibold rounded-full px-8 py-3 transition"
-                type="submit"
+          {/* Destinasi Section */}
+          <section className="max-w-[1200px] mx-auto px-6 md:px-12 py-16">
+            <div className="flex justify-between items-center mb-10">
+              <h2 className="text-3xl font-semibold text-gray-900">
+                Destinasi Wisata
+              </h2>
+              <button 
+                className="flex items-center text-[#7C4A00] hover:text-[#5a3600] font-medium"
+                onClick={() => alert("Akan mengarah ke halaman destinasi")}
               >
-                Kirim Pesan
+                Lihat Semua <FaArrowRight className="ml-2" />
               </button>
-            </form>
-          </div>
-        </section>
-
-        {/*batom buy*/}
-        <BuyTicketButton/>
-
-        <footer className="bg-[#f9f9f9] border-t border-gray-300 mt-20 pt-10 pb-4 relative">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row md:items-center md:justify-between space-y-6 md:space-y-0">
-            <div className="flex items-center space-x-10">
-              <img
-                src="https://storage.googleapis.com/a1aa/image/353a668a-bcd1-4a0e-e1cd-6b11314b6da3.jpg"
-                alt="BUMN logo"
-                className="h-10 w-auto"
-                loading="lazy"
-              />
-              <div className="border-l border-gray-300 h-10"></div>
-              <img
-                src="https://storage.googleapis.com/a1aa/image/1337f648-de50-4122-aba4-99a4f8af343a.jpg"
-                alt="InJourney logo"
-                className="h-10 w-auto"
-                loading="lazy"
-              />
             </div>
-
-            <div className="flex space-x-4 text-[#a3b04a] text-lg">
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               {[
-                "instagram",
-                "facebook-f",
-                "twitter",
-                "linkedin-in",
-                "youtube",
-                "tiktok",
-              ].map((icon) => (
-                <a
-                  key={icon}
-                  href="#"
-                  className="hover:text-[#8a9a3a]"
-                  aria-label={icon}
-                >
-                  <i className={`fab fa-${icon}`} />
-                </a>
+                {
+                  title: "Galeri Seni",
+                  desc: "Koleksi seni tradisional dan kontemporer Lampung",
+                  img: "https://storage.googleapis.com/a1aa/image/ebe59a5f-d698-4c6c-4265-156eb1cf22cf.jpg"
+                },
+                {
+                  title: "Ruang Sejarah",
+                  desc: "Perjalanan sejarah Lampung dari masa ke masa",
+                  img: "https://storage.googleapis.com/a1aa/image/e22f4a53-e499-4b1d-6663-0e6affe4315f.jpg"
+                },
+                {
+                  title: "Taman Budaya",
+                  desc: "Area outdoor dengan berbagai pertunjukan budaya",
+                  img: "https://storage.googleapis.com/a1aa/image/12f7d456-0096-4f51-d2ff-7f96fe98720b.jpg"
+                }
+              ].map((item, index) => (
+                <div key={index} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition">
+                  <img
+                    alt={item.title}
+                    className="w-full h-48 object-cover"
+                    src={item.img}
+                  />
+                  <div className="p-6">
+                    <h3 className="text-xl font-semibold mb-2 text-gray-900">
+                      {item.title}
+                    </h3>
+                    <p className="text-gray-700 text-sm leading-relaxed">
+                      {item.desc}
+                    </p>
+                  </div>
+                </div>
               ))}
             </div>
-          </div>
+          </section>
 
-          <nav className="max-w-7xl mx-auto mt-6 px-4 sm:px-6 lg:px-8 text-center text-xs text-gray-600 space-x-4">
-            {[
-              "Beranda",
-              "Destination Info",
-              "Experiences",
-              "Venues",
-              "Agenda",
-              "News",
-              "Brosur",
-            ].map((item) => (
-              <a key={item} href="#" className="hover:text-gray-900">
-                {item}
-              </a>
-            ))}
-          </nav>
+          {/* Sejarah Section */}
+          <section className="bg-gray-50 py-16">
+            <div className="max-w-[1200px] mx-auto px-6 md:px-12">
+              <div className="flex flex-col md:flex-row gap-10 items-center">
+                <div className="md:w-1/2">
+                  <h2 className="text-3xl font-semibold mb-6 text-gray-900">
+                    Sejarah Museum Lampung
+                  </h2>
+                  <p className="text-gray-700 text-lg leading-relaxed mb-6">
+                    Museum Lampung didirikan pada tahun 1975 dan diresmikan pada tahun 1988. 
+                    Museum ini menyimpan lebih dari 4.800 koleksi benda bersejarah dan budaya 
+                    yang menjadi saksi perkembangan peradaban masyarakat Lampung.
+                  </p>
+                  <button
+                    className="inline-flex items-center text-[#7C4A00] hover:text-[#5a3600] font-medium"
+                    onClick={() => alert("Akan mengarah ke halaman sejarah")}
+                  >
+                    Baca Selengkapnya <FaArrowRight className="ml-2" />
+                  </button>
+                </div>
+                <div className="md:w-1/2">
+                  <img 
+                    src="https://storage.googleapis.com/a1aa/image/353a668a-bcd1-4a0e-e1cd-6b11314b6da3.jpg" 
+                    alt="Gedung Museum Lampung" 
+                    className="rounded-lg shadow-md w-full"
+                  />
+                </div>
+              </div>
+            </div>
+          </section>
 
-          <div className="max-w-7xl mx-auto mt-6 px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-3 gap-6 text-xs text-gray-700">
-            <div>
-              <p className="font-semibold mb-1">Contact Us</p>
-              <p>info@museumlampung.id</p>
+          {/* Koleksi Unggulan Section */}
+          <section className="max-w-[1200px] mx-auto px-6 md:px-12 py-16">
+            <div className="flex justify-between items-center mb-10">
+              <h2 className="text-3xl font-semibold text-gray-900">
+                Koleksi Unggulan
+              </h2>
+              <button 
+                className="flex items-center text-[#7C4A00] hover:text-[#5a3600] font-medium"
+                onClick={() => alert("Akan mengarah ke halaman koleksi")}
+              >
+                Lihat Semua <FaArrowRight className="ml-2" />
+              </button>
             </div>
-            <div>
-              <p className="font-semibold mb-1">Head Office Address</p>
-              <p>Jl. Pangeran Antasari No. 8, Bandar Lampung, Lampung 35131</p>
+            
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+              {dummyCollections.map((collection) => (
+                <motion.div 
+                  key={collection.id}
+                  whileHover={{ y: -5 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="text-center cursor-pointer"
+                  onClick={() => setSelectedCollection(collection)}
+                >
+                  <motion.div 
+                    whileHover={{ boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
+                    className="rounded-lg overflow-hidden"
+                  >
+                    <img
+                      alt={collection.title}
+                      className="w-full h-40 object-cover"
+                      src={collection.image}
+                    />
+                  </motion.div>
+                  <h3 className="font-medium text-gray-900 mt-2">{collection.title}</h3>
+                </motion.div>
+              ))}
             </div>
-            <div>
-              <p className="font-semibold mb-1">
-                Representative Office Address
-              </p>
-              <p>
-                Kantor Gedung Pengelola TMII Lt. 3 Jl. Raya Taman Mini, Jakarta
-                Timur 13560
-              </p>
-            </div>
-          </div>
+          </section>
 
-          <div className="bg-[#a3b04a] text-white text-xs text-center py-2 mt-10">
-            Museum Lampung © 2025. All Rights Reserved
+          {/* Galeri Section */}
+          <section className="bg-gray-50 py-16">
+            <div className="max-w-[1200px] mx-auto px-6 md:px-12">
+              <div className="flex justify-between items-center mb-10">
+                <h2 className="text-3xl font-semibold text-gray-900">
+                  Galeri Foto
+                </h2>
+                <button 
+                  className="flex items-center text-[#7C4A00] hover:text-[#5a3600] font-medium"
+                  onClick={() => alert("Akan mengarah ke halaman galeri")}
+                >
+                  Lihat Semua <FaArrowRight className="ml-2" />
+                </button>
+              </div>
+              
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                {[1,2,3,4,5,6].map((item) => (
+                  <div key={item} className="aspect-square overflow-hidden rounded-lg">
+                    <img
+                      src={`https://storage.googleapis.com/a1aa/image/${item === 1 ? 'ebe59a5f-d698-4c6c-4265-156eb1cf22cf' : 
+                            item === 2 ? 'e22f4a53-e499-4b1d-6663-0e6affe4315f' :
+                            item === 3 ? '12f7d456-0096-4f51-d2ff-7f96fe98720b' :
+                            item === 4 ? '1337f648-de50-4122-aba4-99a4f8af343a' :
+                            '353a668a-bcd1-4a0e-e1cd-6b11314b6da3'}.jpg`}
+                      alt={`Galeri ${item}`}
+                      className="w-full h-full object-cover hover:scale-105 transition duration-500"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+
+          {/* Info Tiket */}
+          <section className="max-w-[1200px] mx-auto px-6 md:px-12 py-16 text-center">
+            <h2 className="text-3xl font-semibold mb-6 text-gray-900">
+              Kunjungi Museum Lampung
+            </h2>
+            <p className="max-w-2xl mx-auto text-gray-700 text-lg mb-8">
+              Buka Selasa-Minggu, pukul 08.00-16.00 WIB. Dapatkan pengalaman 
+              wisata budaya yang tak terlupakan di Museum Lampung.
+            </p>
+            <div className="flex justify-center gap-4">
+              <button
+                className="bg-[#7C4A00] hover:bg-[#5a3600] text-white font-semibold rounded-full px-8 py-3 transition flex items-center"
+                onClick={() => alert("Akan mengarah ke pemesanan tiket")}
+              >
+                <FaTicketAlt className="mr-2" /> Pesan Tiket
+              </button>
+              <button
+                className="border border-[#7C4A00] text-[#7C4A00] hover:bg-[#f8f3ec] font-semibold rounded-full px-8 py-3 transition"
+                onClick={() => alert("Akan mengarah ke halaman tur")}
+              >
+                Tur Museum
+              </button>
+            </div>
+          </section>
+        </main>
+
+        <RatingSystem />
+
+        {/* Modal untuk koleksi yang dipilih */}
+        {selectedCollection && (
+          <CollectionModal 
+            collection={selectedCollection}
+            onClose={() => setSelectedCollection(null)}
+          />
+        )}
+
+        {/* Floating Buy Ticket Button */}
+        <BuyTicketButton/>
+
+        {/* Footer */}
+        <footer className="bg-[#f9f9f9] border-t border-gray-300 pt-10 pb-4">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+              <div>
+                <h3 className="font-semibold text-lg mb-4">Museum Lampung</h3>
+                <p className="text-gray-600 text-sm">
+                  Jl. Pangeran Antasari No. 8, Bandar Lampung, Lampung 35131
+                </p>
+              </div>
+              
+              <div>
+                <h3 className="font-semibold text-lg mb-4">Menu</h3>
+                <ul className="space-y-2 text-sm text-gray-600">
+                  <li><button className="hover:text-[#7C4A00]" onClick={() => alert("Beranda")}>Beranda</button></li>
+                  <li><button className="hover:text-[#7C4A00]" onClick={() => alert("Destinasi")}>Destinasi</button></li>
+                  <li><button className="hover:text-[#7C4A00]" onClick={() => alert("Sejarah")}>Sejarah</button></li>
+                  <li><button className="hover:text-[#7C4A00]" onClick={() => alert("Koleksi")}>Koleksi</button></li>
+                  <li><button className="hover:text-[#7C4A00]" onClick={() => alert("Galeri")}>Galeri</button></li>
+                </ul>
+              </div>
+              
+              <div>
+                <h3 className="font-semibold text-lg mb-4">Kontak</h3>
+                <ul className="space-y-2 text-sm text-gray-600">
+                  <li>info@museumlampung.id</li>
+                  <li>+62 812 3456 7890</li>
+                </ul>
+              </div>
+              
+              <div>
+                <h3 className="font-semibold text-lg mb-4">Sosial Media</h3>
+                <div className="flex space-x-4">
+                  {['facebook', 'instagram', 'twitter', 'youtube'].map((icon) => (
+                    <button 
+                      key={icon} 
+                      className="text-gray-600 hover:text-[#7C4A00]"
+                      onClick={() => alert(`Membuka ${icon}`)}
+                    >
+                      <i className={`fab fa-${icon} text-lg`} />
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+            
+            <div className="border-t border-gray-300 mt-8 pt-6 text-center text-sm text-gray-500">
+              <p>© {new Date().getFullYear()} Museum Lampung. All rights reserved.</p>
+            </div>
           </div>
         </footer>
       </div>
