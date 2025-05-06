@@ -1,4 +1,4 @@
-//pages/admin/data-tiket.js
+// pages/admin/data-tiket.js
 
 import { useState, useEffect } from "react";
 import Layout from "../components/admin/Layout";
@@ -19,32 +19,45 @@ export default function DataTiket() {
   const [currentTicket, setCurrentTicket] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Fungsi untuk memeriksa apakah token kedaluwarsa
+  const isTokenExpired = (token) => {
+    if (!token) return true;
+    const tokenParts = token.split(".");
+    if (tokenParts.length === 3) {
+      const payload = JSON.parse(atob(tokenParts[1]));
+      const expiryTime = payload.exp * 1000; // exp ada di dalam payload JWT
+      const currentTime = Date.now();
+      return currentTime > expiryTime;
+    }
+    return true;
+  };
+
   const fetchTickets = async () => {
     try {
       setLoading(true);
-  
+
       const token = localStorage.getItem("token");
       console.log("Token yang ditemukan:", token);
-  
-      if (!token) {
-        throw new Error("Tidak ada token login. Harap login terlebih dahulu.");
+
+      if (!token || isTokenExpired(token)) {
+        throw new Error("Token tidak valid atau telah kedaluwarsa. Harap login kembali.");
       }
-  
+
       const response = await fetch(API_BASE_URL, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
       });
-  
+
       console.log("Response status:", response.status);
-  
+
       if (!response.ok) {
         const errorText = await response.text();
         console.error("Response error text:", errorText);
         throw new Error(`Gagal mengambil data tiket (${response.status})`);
       }
-  
+
       const data = await response.json();
       console.log("Data tiket diterima:", data);
       setTickets(data);
@@ -60,27 +73,27 @@ export default function DataTiket() {
       setLoading(false);
     }
   };
-  
+
   async function handleSubmit(formData) {
     const token = localStorage.getItem("token");
-    
-    if (!token) {
+
+    if (!token || isTokenExpired(token)) {
       Swal.fire({
         icon: "error",
         title: "Error",
-        text: "Token tidak ditemukan",
+        text: "Token tidak valid atau telah kedaluwarsa. Harap login kembali.",
       });
       return;
     }
-  
+
     try {
       setIsSubmitting(true);
-      const url = currentTicket 
-        ? `${API_BASE_URL}/${currentTicket.id}` 
+      const url = currentTicket
+        ? `${API_BASE_URL}/${currentTicket.id}`
         : API_BASE_URL;
-      
+
       const method = currentTicket ? "PUT" : "POST";
-  
+
       const response = await fetch(url, {
         method,
         headers: {
@@ -89,21 +102,21 @@ export default function DataTiket() {
         },
         body: JSON.stringify(formData),
       });
-  
+
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || "Gagal menyimpan tiket");
       }
-  
+
       const data = await response.json();
       Swal.fire({
         icon: "success",
         title: "Sukses",
-        text: currentTicket 
-          ? "Tiket berhasil diperbarui" 
+        text: currentTicket
+          ? "Tiket berhasil diperbarui"
           : "Tiket berhasil ditambahkan",
       });
-      
+
       handleCloseModal();
       fetchTickets();
     } catch (error) {
@@ -117,19 +130,19 @@ export default function DataTiket() {
       setIsSubmitting(false);
     }
   }
-  
+
   async function handleDelete(id) {
     const token = localStorage.getItem("token");
-  
-    if (!token) {
+
+    if (!token || isTokenExpired(token)) {
       Swal.fire({
         icon: "error",
         title: "Error",
-        text: "Token tidak ditemukan",
+        text: "Token tidak valid atau telah kedaluwarsa. Harap login kembali.",
       });
       return;
     }
-  
+
     try {
       const response = await fetch(`${API_BASE_URL}/${id}`, {
         method: "DELETE",
@@ -138,19 +151,26 @@ export default function DataTiket() {
           Authorization: `Bearer ${token}`,
         },
       });
-  
+
+      console.log("Response status:", response.status);
+      console.log("Response body:", await response.text()); // Debugging response
+
       if (!response.ok) {
         const errorData = await response.json();
+        console.error("Error Data:", errorData);
         throw new Error(errorData.message || "Gagal menghapus tiket");
       }
-  
+
       const data = await response.json();
+      console.log("Deleted Ticket Data:", data);
+
       Swal.fire({
         icon: "success",
         title: "Sukses",
         text: "Tiket berhasil dihapus",
       });
-      fetchTickets(); // Refresh data
+
+      fetchTickets();
     } catch (error) {
       console.error("Delete error:", error);
       Swal.fire({

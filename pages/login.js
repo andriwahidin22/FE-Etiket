@@ -15,12 +15,25 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
 
   // Cek apakah user sudah login (ada token)
+  const [isRedirecting, setIsRedirecting] = useState(false);
+  const token = getCookie("token");
+  const role = getCookie("role"); // Jika kamu set role juga di cookie saat login
+
   useEffect(() => {
-    const token = getCookie("token");
-    if (token) {
-      router.replace("/"); // jika sudah login, redirect ke home
+  
+    if (token && role) {
+      const userRole = role.toUpperCase();
+      if (userRole === "ADMIN") {
+        router.replace("/admin");
+      } else {
+        router.replace("/");
+      }
     }
-  }, []);
+  }, [token,role]);
+  
+  
+  if (isRedirecting) return null; // atau spinner
+  
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
@@ -49,24 +62,24 @@ export default function Login() {
         throw new Error(data.msg || "Login gagal");
       }
 
-      if (!data.token) {
+      if (!data.response.token) {
         throw new Error("Token tidak ditemukan di respons server.");
       }
 
       // Set cookie token
-      setCookie("token", data.token, {
+      setCookie("token", data.response.token, {
         maxAge: 60 * 60 * 24, // 1 hari
         path: "/",
       });
 
       // Role-based redirect
-      const userRole = (data.role || "").toUpperCase();
+      const userRole = (data.response.role || "").toUpperCase();
       if (userRole === "ADMIN") {
         router.push("/admin");
       } else if (userRole === "USER") {
-        router.push("/pembeli/profile");
-      } else {
         router.push("/");
+      } else {
+        router.push("/");2
       }
 
     } catch (err) {
