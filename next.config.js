@@ -6,7 +6,11 @@ const nextConfig = {
       'upload.wikimedia.org',
       'images.unsplash.com',
       'radartv.disway.id',
-      'img.youtube.com'
+      'www.asdp.id',
+      'indonesiakaya.com',
+      'radartv.disway.id',
+      'lampungmediaonline.com',
+      'lampungpro.co'
     ],
   },
 }

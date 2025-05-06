@@ -2,8 +2,8 @@ import { useState, useEffect } from "react";
 import Head from "next/head";
 import Image from "next/image";
 import { FaTicketAlt } from "react-icons/fa";
-import BuyTicketButton from "./components/BuyTicketButton";
-import MuseumHeader from "./components/MuseumHeader";
+import BuyTicketButton from "./components/common/BuyTicketButton";
+import MuseumHeader from "./components/common/MuseumHeader";
 
 export default function Contact() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -56,7 +56,7 @@ export default function Contact() {
         <main className="pt-20">
           <div className="relative h-[400px]">
             <Image
-              src="https://storage.googleapis.com/a1aa/image/751e5f1e-e16b-4ec2-ff12-da02dedd1bfd.jpg"
+              src="https://www.asdp.id/storage//uploads/siaranpers/d905b966b12f4610fce258007a737f4d.jpeg"
               alt="Gedung Museum Lampung"
               layout="fill"
               objectFit="cover"

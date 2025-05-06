@@ -4,8 +4,8 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { FaCalendarAlt, FaCircle, FaPlus, FaMinus, FaChevronLeft, FaChevronRight } from 'react-icons/fa';
-import MuseumHeader from '../components/MuseumHeader';
-import MuseumFooter from '../components/MuseumFooter';
+import MuseumHeader from '../components/common/MuseumHeader';
+import MuseumFooter from '../components/common/MuseumFooter';
 import Head from 'next/head';
 
 const MuseumBooking = () => {

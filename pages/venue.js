@@ -7,8 +7,8 @@ import {
   FaArrowCircleLeft,
   FaArrowCircleRight,
 } from "react-icons/fa";
-import BuyTicketButton from "./components/BuyTicketButton";
-import MuseumHeader from "./components/MuseumHeader";
+import BuyTicketButton from "./components/common/BuyTicketButton";
+import MuseumHeader from "./components/common/MuseumHeader";
 
 // SafeImage component with error handling
 function SafeImage({ src, alt, width, height, className }) {
@@ -93,7 +93,7 @@ export default function Venue() {
         <main className="pt-20">
           <div className="relative h-[400px]">
             <Image
-              src="https://radartv.disway.id/upload/c06d7365fc85afe5e3d5f1c1a351251c.jpg"
+              src="https://indonesiakaya.com/wp-content/uploads/2020/10/Diorama_aneka_satwa_langka_yang_hidup_di_Lampung_yang_dipajang_disalah_satu_sudut_museum_2.jpg"
               alt="Gedung Museum Lampung"
               layout="fill"
               objectFit="cover"
@@ -101,7 +101,7 @@ export default function Venue() {
             />
             <div className="absolute inset-0 flex items-center justify-center">
               <h1 className="text-4xl md:text-5xl font-bold text-white text-center px-4">
-                Sejarah
+                KOLEKSI MUSEUM
               </h1>
             </div>
           </div>

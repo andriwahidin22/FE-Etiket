@@ -3,8 +3,8 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import { FaArrowRight, FaCheckCircle, FaTicketAlt } from "react-icons/fa";
-import BuyTicketButton from "./components/BuyTicketButton";
-import MuseumHeader from "./components/MuseumHeader";
+import BuyTicketButton from "./components/common/BuyTicketButton";
+import MuseumHeader from "./components/common/MuseumHeader";
 
 export default function Home() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -31,7 +31,7 @@ export default function Home() {
         <main className="pt-20">
           <div className="relative h-[400px]">
             <Image
-              src="https://storage.googleapis.com/a1aa/image/751e5f1e-e16b-4ec2-ff12-da02dedd1bfd.jpg"
+              src="https://radartv.disway.id/upload/89b78b819107a07dbba09f2b227a9032.jpeg"
               alt="Gedung Museum Lampung"
               layout="fill"
               objectFit="cover"
@@ -39,7 +39,7 @@ export default function Home() {
             />
             <div className="absolute inset-0 flex items-center justify-center">
               <h1 className="text-4xl md:text-5xl font-bold text-white text-center px-4">
-                Sejarah
+                DESTINASI INFO
               </h1>
             </div>
           </div>

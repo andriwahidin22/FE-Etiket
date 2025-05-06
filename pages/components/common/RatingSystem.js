@@ -15,12 +15,7 @@ export default function RatingSystem() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [editingReviewId, setEditingReviewId] = useState(null);
-  const [showForm, setShowForm] = useState(false);
-
-  // Debug session
-  console.log('Session data:', session);
-  console.log('Is authenticated:', session ? true : false);
-  console.log('User role:', session?.user?.role);
+  const [showForm, setShowForm] = useState(false); 
 
   // Calculate average rating
   const calculateAverage = (reviews) => {
@@ -37,20 +32,17 @@ export default function RatingSystem() {
       setIsLoading(true);
       setError(null);
       
-      console.log('Fetching reviews...');
       const response = await fetch('/api/reviews');
       
       if (!response.ok) {
-        throw new Error('Failed to fetch reviews');
+        throw new Error('Gagal mengambil data ulasan');
       }
 
       const data = await response.json();
-      console.log('Reviews data:', data);
-      
       setReviews(data.reviews || data.data?.reviews || []);
       setAverageRating(data.averageRating || calculateAverage(data.reviews || data.data?.reviews));
     } catch (err) {
-      console.error('Error fetching reviews:', err);
+      console.error('Error:', err);
       setError(err.message);
     } finally {
       setIsLoading(false);
@@ -63,7 +55,6 @@ export default function RatingSystem() {
 
   // Toggle form visibility
   const toggleForm = () => {
-    console.log('Toggling form. Current state:', showForm);
     setShowForm(!showForm);
     if (showForm) {
       setEditingReviewId(null);
@@ -77,7 +68,7 @@ export default function RatingSystem() {
     e.preventDefault();
     
     if (!rating) {
-      setError('Please select a rating');
+      setError('Harap beri rating terlebih dahulu');
       return;
     }
 
@@ -90,14 +81,6 @@ export default function RatingSystem() {
         : '/api/reviews/create';
 
       const method = editingReviewId ? 'PUT' : 'POST';
-
-      console.log('Submitting review:', {
-        endpoint,
-        method,
-        rating,
-        comment,
-        accessToken: session?.accessToken ? 'exists' : 'missing'
-      });
 
       const response = await fetch(endpoint, {
         method,
@@ -112,10 +95,9 @@ export default function RatingSystem() {
       });
 
       const data = await response.json();
-      console.log('Submission response:', data);
       
       if (!response.ok) {
-        throw new Error(data.message || 'Failed to submit review');
+        throw new Error(data.message || 'Gagal menyimpan ulasan');
       }
 
       await fetchReviews();
@@ -124,29 +106,76 @@ export default function RatingSystem() {
       setComment('');
       setShowForm(false);
     } catch (err) {
-      console.error('Error submitting review:', err);
-      setError(err.message || 'Error submitting review');
+      console.error('Error:', err);
+      setError(err.message || 'Terjadi kesalahan saat menyimpan ulasan');
     } finally {
       setIsLoading(false);
     }
   };
 
-  // ... (deleteReview dan startEditing tetap sama)
+  // Delete review
+  const deleteReview = async (id) => {
+    if (!window.confirm('Apakah Anda yakin ingin menghapus ulasan ini?')) {
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      const response = await fetch(`/api/reviews/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${session?.accessToken}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Gagal menghapus ulasan');
+      }
+
+      await fetchReviews();
+    } catch (err) {
+      console.error('Error:', err);
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Start editing review
+  const startEditing = (review) => {
+    setEditingReviewId(review.id);
+    setRating(review.score);
+    setComment(review.comment || '');
+  };
 
   return (
     <section className="max-w-[1200px] mx-auto px-6 md:px-12 py-16">
       <div className="bg-white rounded-lg shadow-md p-8">
         <h2 className="text-3xl font-semibold mb-6 text-gray-900">
-          Visitor Reviews
+          Ulasan Pengunjung
         </h2>
 
-        {/* Debug info - hanya untuk development */}
-        <div className="bg-yellow-50 p-4 mb-6 rounded-lg">
-          <h3 className="font-bold text-yellow-800">Debug Information:</h3>
-          <p>Session: {session ? 'Authenticated' : 'Not authenticated'}</p>
-          <p>User ID: {session?.user?.id || 'N/A'}</p>
-          <p>User Role: {session?.user?.role || 'N/A'}</p>
-          <p>Show Form: {showForm ? 'Yes' : 'No'}</p>
+        {/* Average rating display */}
+        <div className="flex items-center mb-8">
+          <div className="text-4xl font-bold mr-4">{averageRating.toFixed(1)}</div>
+          <div className="flex">
+            {[1, 2, 3, 4, 5].map((star) => (
+              <span key={star} className="text-2xl">
+                {star <= averageRating ? (
+                  <FaStar className="text-yellow-400" />
+                ) : star - 0.5 <= averageRating ? (
+                  <FaStarHalfAlt className="text-yellow-400" />
+                ) : (
+                  <FaRegStar className="text-yellow-400" />
+                )}
+              </span>
+            ))}
+          </div>
+          <span className="ml-2 text-gray-600">
+            ({reviews.length} ulasan)
+          </span>
         </div>
 
         {/* Tombol untuk menampilkan form */}
@@ -164,20 +193,14 @@ export default function RatingSystem() {
         {/* Form untuk menambahkan/mengedit ulasan */}
         {showForm && (
           <form onSubmit={submitReview} className="mb-8 bg-gray-50 p-6 rounded-lg">
-            <h3 className="text-xl font-semibold mb-4">
-              {editingReviewId ? 'Edit Ulasan Anda' : 'Tambah Ulasan Baru'}
-            </h3>
-            
             <div className="mb-4">
-              <label className="block text-gray-700 mb-2 font-medium">Rating:</label>
+              <label className="block text-gray-700 mb-2 font-medium">Beri Rating:</label>
               <div className="flex space-x-2">
                 {[1, 2, 3, 4, 5].map((star) => (
                   <button
                     key={star}
                     type="button"
-                    className={`text-3xl focus:outline-none ${
-                      (hover || rating) >= star ? 'text-yellow-400' : 'text-gray-300'
-                    }`}
+                    className={`text-3xl focus:outline-none ${rating >= star ? 'text-yellow-400' : 'text-gray-300'}`}
                     onClick={() => setRating(star)}
                     onMouseEnter={() => setHover(star)}
                     onMouseLeave={() => setHover(0)}
@@ -186,14 +209,12 @@ export default function RatingSystem() {
                   </button>
                 ))}
               </div>
-              <p className="text-sm text-gray-500 mt-1">
-                Rating terpilih: {rating} bintang
-              </p>
+              <p className="text-sm text-gray-500 mt-1">Pilih bintang untuk memberi rating (1-5)</p>
             </div>
 
             <div className="mb-4">
               <label htmlFor="comment" className="block text-gray-700 mb-2 font-medium">
-                Komentar:
+                Ulasan Anda:
               </label>
               <textarea
                 id="comment"
@@ -206,11 +227,7 @@ export default function RatingSystem() {
               />
             </div>
 
-            {error && (
-              <div className="bg-red-50 text-red-700 p-3 rounded mb-4">
-                {error}
-              </div>
-            )}
+            {error && <div className="text-red-500 mb-4">{error}</div>}
 
             <div className="flex space-x-4">
               <button
@@ -218,7 +235,7 @@ export default function RatingSystem() {
                 className="bg-[#7C4A00] hover:bg-[#5a3600] text-white font-semibold py-2 px-6 rounded-md transition disabled:opacity-50"
                 disabled={isLoading}
               >
-                {isLoading ? "Menyimpan..." : "Simpan Ulasan"}
+                {isLoading ? "Menyimpan..." : editingReviewId ? "Perbarui Ulasan" : "Kirim Ulasan"}
               </button>
               
               <button

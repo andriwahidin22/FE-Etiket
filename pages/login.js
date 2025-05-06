@@ -1,4 +1,4 @@
-//pages/login.js
+// file: pages/login.js
 
 import { useState } from "react";
 import Head from "next/head";
@@ -40,39 +40,39 @@ export default function Login() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(formData),
       });
   
       const data = await response.json();
   
       if (!response.ok) {
-        throw new Error(data.msg || "Login failed");
+        throw new Error(data.msg || "Login gagal");
       }
   
-      // Add await for cookie setting
-      await setCookie('token', data.token, {
-        maxAge: 60 * 60 * 24,
-        path: '/',
+      if (!data.token) {
+        throw new Error("Token tidak ditemukan di respons server.");
+      }
+  
+      setCookie("token", data.token, {
+        maxAge: 60 * 60 * 24, // 1 hari
+        path: "/",
       });
   
-      // Debug the role value
-      console.log("User role:", data.role);
-      
-      // Case-insensitive role check
-      if (data.role && data.role.toUpperCase() === "ADMIN") {
-        await router.push("/admin");
+      // Redirect berdasarkan role
+      const userRole = data.role?.toUpperCase();
+      if (userRole === "ADMIN") {
+        router.push("/admin");
       } else {
-        await router.push("/");
+        router.push("/");
       }
-  
     } catch (err) {
       setError(err.message);
-      setLoading(false);
     } finally {
       setLoading(false);
     }
   };
-
+  
+  
 
   return (
     <>
@@ -81,7 +81,6 @@ export default function Login() {
         <meta name="description" content="Login ke akun Museum Lampung" />
       </Head>
 
-      {/* Custom White Header */}
       <header className="fixed top-0 left-0 w-full z-50 bg-white shadow-sm">
         <nav className="max-w-[1200px] mx-auto flex items-center justify-between px-8 py-4">
           <Link href="/" className="flex items-center">
@@ -94,19 +93,14 @@ export default function Login() {
               </span>
             </div>
           </Link>
-          
           <div className="flex items-center space-x-4">
-            <Link 
-              href="/" 
-              className="text-sm text-gray-600 hover:text-[#7C4A00] transition-colors"
-            >
+            <Link href="/" className="text-sm text-gray-600 hover:text-[#7C4A00] transition-colors">
               Kembali ke Beranda
             </Link>
           </div>
         </nav>
       </header>
 
-      {/* Main Content */}
       <main className="pt-28 min-h-screen bg-gray-50">
         <div className="max-w-md mx-auto px-4 py-12">
           <div className="bg-white p-8 rounded-lg shadow-md">
@@ -222,13 +216,6 @@ export default function Login() {
           </div>
         </div>
       </main>
-
-      {/* Simple Footer */}
-      <footer className="bg-white border-t border-gray-200 py-6">
-        <div className="max-w-[1200px] mx-auto px-8 text-center text-xs text-gray-500">
-          &copy; {new Date().getFullYear()} Museum Lampung. All rights reserved.
-        </div>
-      </footer>
     </>
   );
 }

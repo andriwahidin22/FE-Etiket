@@ -2,12 +2,11 @@
 
 import { useState, useEffect } from "react";
 import Head from "next/head";
+import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
-import { FaTicketAlt, FaPlay, FaArrowRight, FaTimes } from "react-icons/fa";
-import MuseumHeader from "./components/MuseumHeader";
-import BuyTicketButton from "./components/BuyTicketButton";
-import RatingSystem from "./components/RatingSystem";
-
+import { FaTicketAlt, FaArrowRight, FaTimes } from "react-icons/fa";
+import MuseumHeader from "./components/common/MuseumHeader";
+import BuyTicketButton from "./components/common/BuyTicketButton";
 
 // Data dummy untuk koleksi
 const dummyCollections = [
@@ -120,90 +119,35 @@ function CollectionModal({ collection, onClose }) {
 }
 
 export default function Home() {
-  const [videoLoaded, setVideoLoaded] = useState(false);
-  const [showFallback, setShowFallback] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
   const [selectedCollection, setSelectedCollection] = useState(null);
-
-  useEffect(() => {
-    setIsMobile(/iPhone|iPad|iPod|Android/i.test(navigator.userAgent));
-    
-    if (!isMobile) {
-      const timer = setTimeout(() => {
-        setShowFallback(false);
-      }, 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [isMobile]);
-
-  const youtubeVideoId = "gR8kj6ti-s4";
-  const embedUrl = `https://www.youtube-nocookie.com/embed/${youtubeVideoId}?rel=0&modestbranding=1`;
-
-  const handlePlayVideo = () => {
-    setVideoLoaded(true);
-    setShowFallback(false);
-  };
-
+  const [heroImage, setHeroImage] = useState(
+    "https://www.asdp.id/storage/uploads/siaranpers/d905b966b12f4610fce258007a737f4d.jpeg"
+  );
+  
   return (
     <>
       <Head>
         <title>Museum Lampung - Ruwai Jurai</title>
-        <meta 
-          httpEquiv="Content-Security-Policy" 
-          content="frame-src https://www.youtube-nocookie.com" 
-        />
       </Head>
 
       <div className="relative bg-white text-gray-800">
-        {/* Header */}
         <MuseumHeader />
 
         <main className="pt-20 relative">
-          {/* Hero Section with Video */}
-          <div className="w-full h-[600px] overflow-hidden relative bg-black">
-            {showFallback && (
-              <div className="absolute inset-0 flex items-center justify-center">
-                <img
-                  src={`https://img.youtube.com/vi/${youtubeVideoId}/maxresdefault.jpg`}
-                  alt="Pratinjau Museum Lampung"
-                  className="absolute inset-0 w-full h-full object-cover brightness-[0.7]"
-                />
-                <button 
-                  onClick={handlePlayVideo}
-                  className="relative z-10 w-20 h-20 bg-red-600 rounded-full flex items-center justify-center hover:bg-red-700 transition transform hover:scale-110"
-                  aria-label="Putar Video"
-                >
-                  <FaPlay className="text-white text-2xl ml-1" />
-                </button>
-              </div>
-            )}
-
-            {(!showFallback || !isMobile) && (
-              <div className={`absolute inset-0 w-full h-full ${videoLoaded ? 'opacity-100' : 'opacity-0'}`}>
-                <iframe
-                  src={videoLoaded ? `${embedUrl}&autoplay=1&mute=1` : embedUrl}
-                  className="w-full h-full"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                  frameBorder="0"
-                  loading="eager"
-                  onLoad={() => setVideoLoaded(true)}
-                />
-              </div>
-            )}
-
-            <div className="absolute inset-0 bg-black bg-opacity-30"></div>
-
-            <div className="absolute inset-0 flex flex-col justify-center max-w-[1200px] mx-auto px-6 md:px-12 z-10">
-              <h1 className="text-white text-4xl md:text-5xl font-semibold leading-tight max-w-4xl drop-shadow-lg">
-                Museum Lampung - Sang Bumi Ruwai Jurai
+          {/* Hero Section with Multiple Fallback Strategies */}
+          <div className="relative h-[700px]">
+            <Image
+              src="https://www.asdp.id/storage//uploads/siaranpers/d905b966b12f4610fce258007a737f4d.jpeg"
+              alt="Gedung Museum Lampung"
+              layout="fill"
+              objectFit="cover"
+              className="brightness-75"
+            />
+            <div className="absolute inset-0 flex items-center justify-center">
+              <h1 className="text-4xl md:text-5xl font-bold text-white text-center px-4">
+                MUSEUM LAMPUNG - RUWAI JURAI
               </h1>
-              <button
-                className="mt-6 w-max bg-white text-[#7C4A00] text-sm font-semibold rounded-full px-5 py-2 hover:bg-gray-100 transition shadow-lg"
-                onClick={() => alert("Akan mengarah ke halaman tur")}
-              >
-                Jelajahi Sekarang
-              </button>
             </div>
           </div>
 
@@ -386,8 +330,6 @@ export default function Home() {
             </div>
           </section>
         </main>
-
-        <RatingSystem />
 
         {/* Modal untuk koleksi yang dipilih */}
         {selectedCollection && (
