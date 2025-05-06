@@ -36,6 +36,8 @@ const MuseumHeader = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  
+
   const handleLogout = () => {
     deleteCookie('token');
     window.location.href = '/login';

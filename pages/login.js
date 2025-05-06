@@ -1,21 +1,26 @@
 // file: pages/login.js
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Head from "next/head";
 import { FaEye, FaEyeSlash, FaGoogle } from "react-icons/fa";
 import { useRouter } from "next/router";
-import { setCookie } from 'cookies-next';
+import { setCookie, getCookie } from 'cookies-next';
 import Link from 'next/link';
 
 export default function Login() {
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
-  const [formData, setFormData] = useState({
-    email: "",
-    password: ""
-  });
+  const [formData, setFormData] = useState({ email: "", password: "" });
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
+
+  // Cek apakah user sudah login (ada token)
+  useEffect(() => {
+    const token = getCookie("token");
+    if (token) {
+      router.replace("/"); // jika sudah login, redirect ke home
+    }
+  }, []);
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
@@ -23,56 +28,53 @@ export default function Login() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
-  
+
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/login`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       });
-  
+
       const data = await response.json();
-  
+
       if (!response.ok) {
         throw new Error(data.msg || "Login gagal");
       }
-  
+
       if (!data.token) {
         throw new Error("Token tidak ditemukan di respons server.");
       }
-  
+
+      // Set cookie token
       setCookie("token", data.token, {
         maxAge: 60 * 60 * 24, // 1 hari
         path: "/",
       });
-  
-      // Redirect berdasarkan role
-      const userRole = data.role?.toUpperCase();
+
+      // Role-based redirect
+      const userRole = (data.role || "").toUpperCase();
       if (userRole === "ADMIN") {
         router.push("/admin");
+      } else if (userRole === "USER") {
+        router.push("/pembeli/profile");
       } else {
         router.push("/");
       }
+
     } catch (err) {
       setError(err.message);
     } finally {
       setLoading(false);
     }
   };
-  
-  
 
   return (
     <>
@@ -110,7 +112,7 @@ export default function Login() {
             <p className="text-center text-sm mb-6 text-gray-600">
               Masuk ke akun Anda untuk melanjutkan
             </p>
-            
+
             {error && (
               <div className="mb-4 p-3 bg-red-100 text-red-700 rounded text-sm">
                 {error}
@@ -127,14 +129,14 @@ export default function Login() {
                   className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm text-black focus:outline-none focus:ring-1 focus:ring-[#7C4A00] focus:border-[#7C4A00] placeholder-gray-500"
                   id="email"
                   name="email"
-                  placeholder="Masukkan Email"
                   type="email"
+                  placeholder="Masukkan Email"
                   value={formData.email}
                   onChange={handleChange}
                   required
                 />
               </div>
-              
+
               {/* Password Field */}
               <div>
                 <label className="block text-sm font-medium mb-1 text-gray-700" htmlFor="password">
@@ -145,8 +147,8 @@ export default function Login() {
                     className="w-full border border-gray-300 rounded-md px-3 py-2 pr-10 text-sm text-black focus:outline-none focus:ring-1 focus:ring-[#7C4A00] focus:border-[#7C4A00] placeholder-gray-500"
                     id="password"
                     name="password"
-                    placeholder="Masukkan Kata Sandi"
                     type={showPassword ? "text" : "password"}
+                    placeholder="Masukkan Kata Sandi"
                     value={formData.password}
                     onChange={handleChange}
                     required
@@ -176,11 +178,11 @@ export default function Login() {
                   Lupa password?
                 </Link>
               </div>
-              
+
               <button
-                className="w-full bg-[#7C4A00] text-white py-2 rounded-md text-sm font-medium hover:bg-[#5a3700] transition flex justify-center items-center"
                 type="submit"
                 disabled={loading}
+                className="w-full bg-[#7C4A00] text-white py-2 rounded-md text-sm font-medium hover:bg-[#5a3700] transition flex justify-center items-center"
               >
                 {loading ? (
                   <>
@@ -206,9 +208,9 @@ export default function Login() {
               <FaGoogle className="text-[#DB4437]" />
               Masuk dengan Google
             </button>
-            
+
             <p className="text-center text-sm mt-6 text-gray-600">
-              Belum punya akun?{' '}
+              Belum punya akun?{" "}
               <Link href="/register" className="font-medium text-[#7C4A00] hover:underline">
                 Daftar sekarang
               </Link>
