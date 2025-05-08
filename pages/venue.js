@@ -10,72 +10,62 @@ import {
 import BuyTicketButton from "./components/common/BuyTicketButton";
 import MuseumHeader from "./components/common/MuseumHeader";
 
-// SafeImage component with error handling
-function SafeImage({ src, alt, width, height, className }) {
-  const [imgSrc, setImgSrc] = useState(src);
-
-  return (
-    <div className={`relative ${className}`} style={{ width, height }}>
-      <Image
-        fill
-        src={imgSrc}
-        alt={alt}
-        className="object-cover"
-        onError={() => setImgSrc("/images/default-collection.jpg")}
-      />
-    </div>
-  );
-}
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL + "/api/venue";
 
 export default function Venue() {
   const [isScrolled, setIsScrolled] = useState(false);
-  const [collections, setCollections] = useState([]);
-  const [selectedCollection, setSelectedCollection] = useState(null);
+  const [venues, setVenues] = useState([]);
+  const [selectedVenue, setSelectedVenue] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const collectionsPerPage = 4;
+  const [loading, setLoading] = useState(true);
+  const venuesPerPage = 4;
 
-  // Generate mock collection data
-  const generateCollection = (id) => ({
-    id,
-    title: `Koleksi ${id}`,
-    desc: `Deskripsi lengkap koleksi ${id} yang menarik dari Museum Lampung. Koleksi ini merupakan bagian dari warisan budaya yang dilestarikan oleh museum.`,
-    img: `/images/collections/collection-${(id % 10) + 1}.jpg`, // Using 10 local images
-    category: ["Arkeologi", "Etnografi", "Seni"][id % 3],
-    year: 1900 + (id % 100),
-    origin: ["Lampung", "Sumatera", "Jawa", "Bali"][id % 4],
-    material: ["Kayu", "Logam", "Keramik", "Tekstil"][id % 4],
-    size: `${30 + (id % 70)}cm x ${20 + (id % 50)}cm`,
-  });
-
-  // Calculate pagination values
-  const totalPages = Math.ceil(collections.length / collectionsPerPage);
-  const currentCollections = collections.slice(
-    (currentPage - 1) * collectionsPerPage,
-    currentPage * collectionsPerPage
-  );
-
-  const goToPage = (page) => {
-    setCurrentPage(Math.max(1, Math.min(page, totalPages)));
-  };
-
+  // Fetch venues from API
   useEffect(() => {
-    // Load collections
-    const loadCollections = async () => {
-      const mockData = Array.from({ length: 700 }, (_, i) =>
-        generateCollection(i + 1)
-      );
-      setCollections(mockData);
+    const fetchVenues = async () => {
+      try {
+        const response = await fetch(API_BASE_URL);
+        if (!response.ok) {
+          throw new Error('Failed to fetch venues');
+        }
+        const data = await response.json();
+        setVenues(data);
+      } catch (error) {
+        console.error('Error fetching venues:', error);
+      } finally {
+        setLoading(false);
+      }
     };
+
+    fetchVenues();
 
     // Handle scroll
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 0);
     };
 
-    loadCollections();
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  // Calculate pagination values
+  const totalPages = Math.ceil(venues.length / venuesPerPage);
+  const currentVenues = venues.slice(
+    (currentPage - 1) * venuesPerPage,
+    currentPage * venuesPerPage
+  );
+
+  const goToPage = (page) => {
+    setCurrentPage(Math.max(1, Math.min(page, totalPages)));
+  };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#7C4A00]"></div>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -101,7 +91,7 @@ export default function Venue() {
             />
             <div className="absolute inset-0 flex items-center justify-center">
               <h1 className="text-4xl md:text-5xl font-bold text-white text-center px-4">
-                KOLEKSI MUSEUM
+                VENUE MUSEUM
               </h1>
             </div>
           </div>
@@ -109,11 +99,11 @@ export default function Venue() {
 
         {/* Main Content */}
         <main className="max-w-6xl mx-auto px-4 py-12">
-          {/* Collections Section */}
+          {/* Venues Section */}
           <section className="mb-16">
             <div className="flex justify-between items-center mb-8">
               <h2 className="text-2xl font-bold text-[#7C4A00]">
-                Galeri Koleksi
+                Daftar Venue
               </h2>
               <div className="flex items-center space-x-2">
                 <button
@@ -136,27 +126,38 @@ export default function Venue() {
               </div>
             </div>
 
-            {/* Collections Grid */}
+            {/* Venues Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-              {currentCollections.map((item) => (
+              {currentVenues.map((venue) => (
                 <div
-                  key={item.id}
+                  key={venue.id}
                   className="border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition cursor-pointer"
-                  onClick={() => setSelectedCollection(item)}
+                  onClick={() => setSelectedVenue(venue)}
                 >
                   <div className="relative h-48">
-                    <Image
-                      src={item.img}
-                      alt={item.title}
-                      layout="fill"
-                      objectFit="cover"
-                    />
+                    {venue.photo ? (
+                      <Image
+                        src={`${process.env.NEXT_PUBLIC_API_URL}/uploads/${venue.photo}`}
+                        alt={venue.name}
+                        layout="fill"
+                        objectFit="cover"
+                      />
+                    ) : (
+                      <div className="bg-gray-200 w-full h-full flex items-center justify-center">
+                        <span className="text-gray-500">No Image</span>
+                      </div>
+                    )}
                   </div>
                   <div className="p-4">
-                    <h3 className="font-semibold text-lg mb-1">{item.title}</h3>
+                    <h3 className="font-semibold text-lg mb-1">{venue.name}</h3>
                     <p className="text-gray-600 text-sm line-clamp-2">
-                      {item.desc}
+                      {venue.description || "Tidak ada deskripsi"}
                     </p>
+                    {venue.year && (
+                      <p className="text-gray-500 text-sm mt-2">
+                        Tahun: {venue.year}
+                      </p>
+                    )}
                     <div className="mt-3 flex items-center text-[#7C4A00] text-sm">
                       <span>Lihat Detail</span>
                       <FaArrowRight className="ml-1" />
@@ -167,52 +168,54 @@ export default function Venue() {
             </div>
 
             {/* Pagination Controls */}
-            <div className="flex justify-center mt-8">
-              <div className="flex space-x-2">
-                <button
-                  onClick={() => goToPage(1)}
-                  disabled={currentPage === 1}
-                  className="px-3 py-1 rounded disabled:opacity-50"
-                >
-                  &laquo;
-                </button>
+            {venues.length > 0 && (
+              <div className="flex justify-center mt-8">
+                <div className="flex space-x-2">
+                  <button
+                    onClick={() => goToPage(1)}
+                    disabled={currentPage === 1}
+                    className="px-3 py-1 rounded disabled:opacity-50"
+                  >
+                    &laquo;
+                  </button>
 
-                {[...Array(Math.min(5, totalPages))].map((_, i) => {
-                  let pageNum;
-                  if (totalPages <= 5) {
-                    pageNum = i + 1;
-                  } else if (currentPage <= 3) {
-                    pageNum = i + 1;
-                  } else if (currentPage >= totalPages - 2) {
-                    pageNum = totalPages - 4 + i;
-                  } else {
-                    pageNum = currentPage - 2 + i;
-                  }
+                  {[...Array(Math.min(5, totalPages))].map((_, i) => {
+                    let pageNum;
+                    if (totalPages <= 5) {
+                      pageNum = i + 1;
+                    } else if (currentPage <= 3) {
+                      pageNum = i + 1;
+                    } else if (currentPage >= totalPages - 2) {
+                      pageNum = totalPages - 4 + i;
+                    } else {
+                      pageNum = currentPage - 2 + i;
+                    }
 
-                  return (
-                    <button
-                      key={pageNum}
-                      onClick={() => goToPage(pageNum)}
-                      className={`px-3 py-1 rounded ${
-                        currentPage === pageNum
-                          ? "bg-[#7C4A00] text-white"
-                          : "bg-gray-200"
-                      }`}
-                    >
-                      {pageNum}
-                    </button>
-                  );
-                })}
+                    return (
+                      <button
+                        key={pageNum}
+                        onClick={() => goToPage(pageNum)}
+                        className={`px-3 py-1 rounded ${
+                          currentPage === pageNum
+                            ? "bg-[#7C4A00] text-white"
+                            : "bg-gray-200"
+                        }`}
+                      >
+                        {pageNum}
+                      </button>
+                    );
+                  })}
 
-                <button
-                  onClick={() => goToPage(totalPages)}
-                  disabled={currentPage === totalPages}
-                  className="px-3 py-1 rounded disabled:opacity-50"
-                >
-                  &raquo;
-                </button>
+                  <button
+                    onClick={() => goToPage(totalPages)}
+                    disabled={currentPage === totalPages}
+                    className="px-3 py-1 rounded disabled:opacity-50"
+                  >
+                    &raquo;
+                  </button>
+                </div>
               </div>
-            </div>
+            )}
           </section>
 
           {/* Facilities Section */}
@@ -253,36 +256,6 @@ export default function Venue() {
                       { label: "Lantai", value: "Lantai 2" }
                     ],
                     img: "/images/facilities/auditorium.jpg"
-                  },
-                  {
-                    title: "Ruang Audio Visual",
-                    description: "Pemutaran film dokumenter dan penyajian informasi digital tentang kebudayaan Lampung.",
-                    details: [
-                      { label: "Kapasitas", value: "30 orang" },
-                      { label: "Fasilitas", value: "LCD Projector" },
-                      { label: "Jadwal", value: "Sesi 1 jam" }
-                    ],
-                    img: "/images/facilities/audio-visual.jpg"
-                  },
-                  {
-                    title: "Taman Budaya",
-                    description: "Area outdoor dengan replika rumah adat Lampung dan taman yang asri untuk bersantai.",
-                    details: [
-                      { label: "Luas", value: "1.500 m²" },
-                      { label: "Fitur", value: "Gazebo, Panggung Terbuka" },
-                      { label: "Aktivitas", value: "Pertunjukan Seni" }
-                    ],
-                    img: "/images/facilities/taman.jpg"
-                  },
-                  {
-                    title: "Museum Shop",
-                    description: "Menjual berbagai cenderamata dan kerajinan khas Lampung sebagai oleh-oleh.",
-                    details: [
-                      { label: "Produk", value: "Tenun, Kerajinan Logam" },
-                      { label: "Lokasi", value: "Lobi Utama" },
-                      { label: "Jam Buka", value: "09.00-15.00 WIB" }
-                    ],
-                    img: "/images/facilities/souvenir.jpg"
                   }
                 ].map((facility, index) => (
                   <div 
@@ -290,13 +263,14 @@ export default function Venue() {
                     className="flex flex-col md:flex-row gap-6 bg-white rounded-lg shadow-md overflow-hidden border border-gray-100"
                   >
                     <div className="md:w-2/5">
-                      <SafeImage
-                        src={facility.img}
-                        alt={facility.title}
-                        width={500}
-                        height={300}
-                        className="w-full h-48 md:h-full object-cover"
-                      />
+                      <div className="relative h-48 md:h-full">
+                        <Image
+                          src={facility.img}
+                          alt={facility.title}
+                          layout="fill"
+                          objectFit="cover"
+                        />
+                      </div>
                     </div>
                     
                     <div className="md:w-3/5 p-6">
@@ -345,20 +319,26 @@ export default function Venue() {
           </section>
         </main>
 
-        {/* Collection Detail Modal */}
-        {selectedCollection && (
+        {/* Venue Detail Modal */}
+        {selectedVenue && (
           <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
             <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
               <div className="relative h-64 md:h-96">
-                <SafeImage
-                  src={selectedCollection.img}
-                  alt={selectedCollection.title}
-                  width={800}
-                  height={400}
-                  className="rounded-t-lg"
-                />
+                {selectedVenue.photo ? (
+                  <Image
+                    src={`${process.env.NEXT_PUBLIC_API_URL}/uploads/${selectedVenue.photo}`}
+                    alt={selectedVenue.name}
+                    layout="fill"
+                    objectFit="cover"
+                    className="rounded-t-lg"
+                  />
+                ) : (
+                  <div className="bg-gray-200 w-full h-full flex items-center justify-center">
+                    <span className="text-gray-500 text-lg">No Image Available</span>
+                  </div>
+                )}
                 <button
-                  onClick={() => setSelectedCollection(null)}
+                  onClick={() => setSelectedVenue(null)}
                   className="absolute top-4 right-4 bg-white rounded-full p-2 shadow-md hover:bg-gray-100"
                 >
                   <svg
@@ -379,41 +359,17 @@ export default function Venue() {
               </div>
               <div className="p-6">
                 <h2 className="text-2xl font-bold mb-2">
-                  {selectedCollection.title}
+                  {selectedVenue.name}
                 </h2>
-                <p className="text-gray-700 mb-6">{selectedCollection.desc}</p>
-
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                  <div>
-                    <p className="text-sm text-gray-500">Kategori</p>
-                    <p className="font-medium">{selectedCollection.category}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-500">Tahun</p>
-                    <p className="font-medium">{selectedCollection.year}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-500">Asal</p>
-                    <p className="font-medium">{selectedCollection.origin}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-500">Material</p>
-                    <p className="font-medium">{selectedCollection.material}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-500">Ukuran</p>
-                    <p className="font-medium">{selectedCollection.size}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-500">Nomor Koleksi</p>
-                    <p className="font-medium">
-                      ML-{selectedCollection.id.toString().padStart(4, "0")}
-                    </p>
-                  </div>
-                </div>
+                {selectedVenue.year && (
+                  <p className="text-gray-600 mb-2">Tahun: {selectedVenue.year}</p>
+                )}
+                <p className="text-gray-700 mb-6">
+                  {selectedVenue.description || "Tidak ada deskripsi tersedia"}
+                </p>
 
                 <button
-                  onClick={() => setSelectedCollection(null)}
+                  onClick={() => setSelectedVenue(null)}
                   className="bg-[#7C4A00] text-white px-6 py-2 rounded-full hover:bg-[#5a3800] transition"
                 >
                   Tutup

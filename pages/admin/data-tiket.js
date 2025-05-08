@@ -1,4 +1,4 @@
-// pages/admin/data-tiket.js
+//pages/admin/data-tiket.js
 
 import { useState, useEffect } from "react";
 import Layout from "../components/admin/Layout";
@@ -6,119 +6,120 @@ import Header from "../components/admin/Header";
 import { FiSearch, FiPlus, FiEdit2, FiTrash2 } from "react-icons/fi";
 import ModalTiket from "../components/admin/ModalTiket";
 import Swal from "sweetalert2";
+import Cookies from "js-cookie";
 
-// Definisikan base URL API
-const API_BASE_URL = "http://localhost:5001/api/ticket";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL + "/api/ticket";
 
 export default function DataTiket() {
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentTicket, setCurrentTicket] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Fungsi untuk memeriksa apakah token kedaluwarsa
-  const isTokenExpired = (token) => {
-    if (!token) return true;
-    const tokenParts = token.split(".");
-    if (tokenParts.length === 3) {
-      const payload = JSON.parse(atob(tokenParts[1]));
-      const expiryTime = payload.exp * 1000; // exp ada di dalam payload JWT
-      const currentTime = Date.now();
-      return currentTime > expiryTime;
-    }
-    return true;
-  };
-
   const fetchTickets = async () => {
+    const token = Cookies.get("token");
+
+    if (!token) {
+      Swal.fire({
+        icon: "error",
+        title: "Authorization Required",
+        text: "Please login again",
+      });
+      return;
+    }
+
     try {
       setLoading(true);
-
-      const token = localStorage.getItem("token");
-      console.log("Token yang ditemukan:", token);
-
-      if (!token || isTokenExpired(token)) {
-        throw new Error("Token tidak valid atau telah kedaluwarsa. Harap login kembali.");
-      }
-
       const response = await fetch(API_BASE_URL, {
         headers: {
           Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
         },
       });
 
-      console.log("Response status:", response.status);
+      if (response.status === 401) {
+        Cookies.remove("token");
+        throw new Error("Session expired. Please login again.");
+      }
 
       if (!response.ok) {
-        const errorText = await response.text();
-        console.error("Response error text:", errorText);
-        throw new Error(`Gagal mengambil data tiket (${response.status})`);
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to fetch tickets");
       }
 
       const data = await response.json();
-      console.log("Data tiket diterima:", data);
       setTickets(data);
-    } catch (err) {
-      console.error("Fetch error:", err);
-      setError(err.message);
+    } catch (error) {
+      console.error("Fetch error:", error);
       Swal.fire({
         icon: "error",
-        title: "Gagal Memuat Data",
-        text: err.message,
+        title: "Error",
+        text: error.message,
       });
     } finally {
       setLoading(false);
     }
   };
 
-  async function handleSubmit(formData) {
-    const token = localStorage.getItem("token");
-
-    if (!token || isTokenExpired(token)) {
+  const handleSubmit = async (formData) => {
+    const token = Cookies.get("token");
+  
+    if (!token) {
       Swal.fire({
         icon: "error",
-        title: "Error",
-        text: "Token tidak valid atau telah kedaluwarsa. Harap login kembali.",
+        title: "Authorization Required",
+        text: "Please login again",
       });
       return;
     }
-
+  
     try {
       setIsSubmitting(true);
-      const url = currentTicket
+      const url = currentTicket 
         ? `${API_BASE_URL}/${currentTicket.id}`
         : API_BASE_URL;
-
+      
       const method = currentTicket ? "PUT" : "POST";
+
+      // Prepare data according to backend expectations
+      const requestData = {
+        code: formData.code,
+        type: formData.type,
+        price: Number(formData.price),
+        terms: formData.terms || "" // Add empty string as default if terms not provided
+      };
 
       const response = await fetch(url, {
         method,
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+          "Authorization": `Bearer ${token}`
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(requestData),
       });
-
+  
+      if (response.status === 401) {
+        Cookies.remove("token");
+        throw new Error("Session expired. Please login again.");
+      }
+  
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || "Gagal menyimpan tiket");
+        throw new Error(errorData.message || errorData.msg || "Failed to save ticket");
       }
-
-      const data = await response.json();
+  
+      const result = await response.json();
+      
       Swal.fire({
         icon: "success",
-        title: "Sukses",
-        text: currentTicket
-          ? "Tiket berhasil diperbarui"
-          : "Tiket berhasil ditambahkan",
+        title: currentTicket ? "Ticket updated!" : "Ticket added!",
+        text: currentTicket ? result.message || "Ticket updated successfully" 
+                           : result.msg || "Ticket created successfully",
       });
-
+  
       handleCloseModal();
-      fetchTickets();
+      await fetchTickets();
     } catch (error) {
       console.error("Submit error:", error);
       Swal.fire({
@@ -129,48 +130,44 @@ export default function DataTiket() {
     } finally {
       setIsSubmitting(false);
     }
-  }
+  };
 
-  async function handleDelete(id) {
-    const token = localStorage.getItem("token");
-
-    if (!token || isTokenExpired(token)) {
-      Swal.fire({
-        icon: "error",
-        title: "Error",
-        text: "Token tidak valid atau telah kedaluwarsa. Harap login kembali.",
-      });
-      return;
-    }
+  const handleDelete = async (id) => {
+    const token = Cookies.get("token");
 
     try {
+      const confirmation = await Swal.fire({
+        title: "Are you sure?",
+        text: "You won't be able to revert this!",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Yes, delete it!",
+      });
+
+      if (!confirmation.isConfirmed) return;
+
       const response = await fetch(`${API_BASE_URL}/${id}`, {
         method: "DELETE",
         headers: {
-          "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
       });
 
-      console.log("Response status:", response.status);
-      console.log("Response body:", await response.text()); // Debugging response
+      if (response.status === 401) {
+        Cookies.remove("token");
+        throw new Error("Session expired. Please login again.");
+      }
 
       if (!response.ok) {
         const errorData = await response.json();
-        console.error("Error Data:", errorData);
-        throw new Error(errorData.message || "Gagal menghapus tiket");
+        throw new Error(errorData.message || "Failed to delete ticket");
       }
 
-      const data = await response.json();
-      console.log("Deleted Ticket Data:", data);
-
-      Swal.fire({
-        icon: "success",
-        title: "Sukses",
-        text: "Tiket berhasil dihapus",
-      });
-
-      fetchTickets();
+      const result = await response.json();
+      Swal.fire("Deleted!", result.message || "Ticket deleted successfully", "success");
+      await fetchTickets();
     } catch (error) {
       console.error("Delete error:", error);
       Swal.fire({
@@ -179,7 +176,7 @@ export default function DataTiket() {
         text: error.message,
       });
     }
-  }
+  };
 
   useEffect(() => {
     fetchTickets();
@@ -195,10 +192,8 @@ export default function DataTiket() {
     setIsModalOpen(false);
   };
 
-  const filteredTickets = tickets.filter(
-    (ticket) =>
-      ticket?.type?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      ticket?.code?.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredTickets = tickets.filter(ticket => 
+    `${ticket.code} ${ticket.type}`.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   if (loading) {
@@ -207,20 +202,7 @@ export default function DataTiket() {
         <div className="p-6">
           <Header />
           <div className="flex justify-center items-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#2a2a2a]"></div>
-          </div>
-        </div>
-      </Layout>
-    );
-  }
-
-  if (error) {
-    return (
-      <Layout>
-        <div className="p-6">
-          <Header />
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative">
-            <strong>Error!</strong> {error}
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-900"></div>
           </div>
         </div>
       </Layout>
@@ -234,73 +216,63 @@ export default function DataTiket() {
 
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div className="relative w-full md:w-64">
-            <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-black" />
+            <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
             <input
               type="text"
-              placeholder="Cari tiket (jenis/kode)..."
-              className="pl-10 pr-4 py-2 w-full border border-[#d9e2e7] rounded-lg"
+              placeholder="Search tickets..."
+              className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
           <button
             onClick={() => handleOpenModal()}
-            className="bg-[#2a2a2a] hover:bg-[#3c3c3c] text-white px-4 py-2 rounded-lg flex items-center gap-2"
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
           >
-            <FiPlus /> Tambah Tiket
+            <FiPlus /> Add Ticket
           </button>
         </div>
 
-        <div className="bg-white rounded-lg border border-[#d9e2e7] overflow-hidden">
+        <div className="bg-white rounded-lg shadow overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-[#d9e2e7]">
+            <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-[#5f7a85] uppercase">
-                    ID
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-[#5f7a85] uppercase">
-                    Kode Tiket
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-[#5f7a85] uppercase">
-                    Jenis Tiket
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-[#5f7a85] uppercase">
-                    Harga
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-[#5f7a85] uppercase">
-                    Tanggal Dibuat
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-[#5f7a85] uppercase">
-                    Aksi
-                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Code</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Terms</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-[#d9e2e7]">
+              <tbody className="bg-white divide-y divide-gray-200">
                 {filteredTickets.length > 0 ? (
                   filteredTickets.map((ticket) => (
                     <tr key={ticket.id}>
-                      <td className="px-6 py-4 text-black">{ticket.id}</td>
-                      <td className="px-6 py-4 text-black font-medium">
-                        {ticket.code}
-                      </td>
-                      <td className="px-6 py-4 text-black">{ticket.type}</td>
-                      <td className="px-6 py-4 text-black">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{ticket.id}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{ticket.code}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{ticket.type}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         Rp {ticket.price.toLocaleString("id-ID")}
                       </td>
-                      <td className="px-6 py-4 text-black">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {ticket.terms || "-"}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {new Date(ticket.createdAt).toLocaleDateString("id-ID")}
                       </td>
-                      <td className="px-6 py-4 text-sm flex gap-2">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <button
                           onClick={() => handleOpenModal(ticket)}
-                          className="text-[#2a2a2a] hover:text-[#3c3c3c]"
+                          className="text-blue-600 hover:text-blue-900 mr-4"
                         >
                           <FiEdit2 />
                         </button>
                         <button
                           onClick={() => handleDelete(ticket.id)}
-                          className="text-red-600 hover:text-red-800"
+                          className="text-red-600 hover:text-red-900"
                         >
                           <FiTrash2 />
                         </button>
@@ -309,11 +281,8 @@ export default function DataTiket() {
                   ))
                 ) : (
                   <tr>
-                    <td
-                      colSpan="6"
-                      className="text-center px-6 py-4 text-sm text-black"
-                    >
-                      Tidak ada tiket ditemukan
+                    <td colSpan="7" className="px-6 py-4 text-center text-sm text-gray-500">
+                      No tickets found
                     </td>
                   </tr>
                 )}
@@ -329,6 +298,12 @@ export default function DataTiket() {
         ticket={currentTicket}
         onSubmit={handleSubmit}
         isSubmitting={isSubmitting}
+        fields={[
+          { name: 'code', label: 'Ticket Code', type: 'text', required: true },
+          { name: 'type', label: 'Ticket Type', type: 'text', required: true },
+          { name: 'price', label: 'Price', type: 'number', required: true },
+          { name: 'terms', label: 'Terms & Conditions', type: 'textarea' }
+        ]}
       />
     </Layout>
   );
