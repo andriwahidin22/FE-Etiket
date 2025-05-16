@@ -1,26 +1,60 @@
-// pages/index.js
-
 import { useState, useEffect } from "react";
 import Image from "next/image";
-import { FaArrowRight, FaCheckCircle, FaTicketAlt } from "react-icons/fa";
+import { FaArrowRight, FaCheckCircle, FaTicketAlt, FaExclamationTriangle } from "react-icons/fa";
 import BuyTicketButton from "./components/common/BuyTicketButton";
 import MuseumHeader from "./components/common/MuseumHeader";
 
-export default function Home() {
+export default function DestinationInfo() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [activeSection, setActiveSection] = useState("jam-operasional");
+  const [tickets, setTickets] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
-
-  const handleScroll = () => {
-    setIsScrolled(window.scrollY > 0);
+  const fetchTickets = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/ticket`);
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to fetch tickets');
+      }
+      
+      const data = await response.json();
+      setTickets(data);
+    } catch (err) {
+      setError(err.message || 'Failed to load ticket data');
+      console.error('Ticket API Error:', err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
+    fetchTickets();
+    
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 0);
+    };
+    
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  // Group tickets by type for display
+  const ticketGroups = tickets.reduce((groups, ticket) => {
+    if (!groups[ticket.type]) {
+      groups[ticket.type] = [];
+    }
+    groups[ticket.type].push(ticket);
+    return groups;
+  }, {});
+
+  const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
 
   return (
     <>
@@ -36,6 +70,7 @@ export default function Home() {
               layout="fill"
               objectFit="cover"
               className="brightness-75"
+              priority
             />
             <div className="absolute inset-0 flex items-center justify-center">
               <h1 className="text-4xl md:text-5xl font-bold text-white text-center px-4">
@@ -145,8 +180,8 @@ export default function Home() {
                 </div>
                 <div className="md:w-1/2 mt-8 md:mt-0 rounded-lg overflow-hidden">
                   <Image
-                    alt="Museum Lampung building exterior with traditional architecture and clear blue sky"
-                    src="https://storage.googleapis.com/a1aa/image/4b1fc25a-1a78-4500-3fa4-422c2cc9f4a9.jpg"
+                    alt="Museum Lampung building exterior"
+                    src="https://www.asdp.id/storage//uploads/siaranpers/d905b966b12f4610fce258007a737f4d.jpeg"
                     width={600}
                     height={400}
                     className="w-full h-auto rounded-lg object-cover"
@@ -163,17 +198,10 @@ export default function Home() {
                 </h2>
                 <ul className="list-disc list-inside text-sm text-gray-600 space-y-3">
                   <li>Dilarang merokok di area museum.</li>
-                  <li>
-                    Dilarang membawa makanan dan minuman ke dalam ruang pamer.
-                  </li>
+                  <li>Dilarang membawa makanan dan minuman ke dalam ruang pamer.</li>
                   <li>Dilarang menyentuh koleksi museum secara langsung.</li>
-                  <li>
-                    Harap menjaga ketertiban dan kebersihan selama kunjungan.
-                  </li>
-                  <li>
-                    Pengunjung diwajibkan mengikuti petunjuk dari petugas
-                    museum.
-                  </li>
+                  <li>Harap menjaga ketertiban dan kebersihan selama kunjungan.</li>
+                  <li>Pengunjung diwajibkan mengikuti petunjuk dari petugas museum.</li>
                 </ul>
               </section>
             )}
@@ -191,50 +219,46 @@ export default function Home() {
                   </p>
                 </section>
 
-                <section className="max-w-6xl mx-auto px-4 grid grid-cols-1 md:grid-cols-3 gap-6 mb-20">
-                  <Card
-                    title="Jenis Tiket"
-                    description="Tarif pengunjung berdasarkan kategori usia dan status pelajar:"
-                    items={[
-                      {
-                        label: "Dewasa (12 tahun ke atas)",
-                        price: "Rp. 20.000",
-                      },
-                      {
-                        label: "Anak-anak (3 s/d 11 tahun)",
-                        price: "Rp. 10.000",
-                      },
-                      { label: "Pelajar/Mahasiswa", price: "Rp. 15.000" },
-                    ]}
-                    buttonText="Pesan Sekarang"
-                  />
-
-                  <Card
-                    title="Paket Tiket"
-                    description="Paket khusus dengan minimal peserta:"
-                    items={[
-                      { label: "Paket Mahasiswa", price: "Rp. 12.000/orang" },
-                      { label: "Paket Pelajar", price: "Rp. 10.000/orang" },
-                      { label: "Paket Instansi", price: "Rp. 18.000/orang" },
-                    ]}
-                    buttonText="Pesan Sekarang"
-                  />
-
-                  <article className="bg-white border border-gray-200 rounded-lg p-6 text-left text-sm text-gray-700">
-                    <h4 className="font-semibold mb-2 text-gray-900">
-                      Tata Tertib
-                    </h4>
-                    <p className="mb-4 text-xs">
-                      Peraturan yang harus dipatuhi selama kunjungan:
-                    </p>
-                    <ul className="list-disc list-inside text-xs text-gray-600 space-y-2 mb-6">
-                      <li>Dilarang merokok di area museum</li>
-                      <li>Dilarang membawa makanan/minuman</li>
-                      <li>Dilarang menyentuh koleksi</li>
-                    </ul>
-                    <Button text="Baca Selengkapnya" />
-                  </article>
-                </section>
+                {error ? (
+                  <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-6">
+                    <div className="flex">
+                      <div className="flex-shrink-0 text-red-500">
+                        <FaExclamationTriangle className="h-5 w-5" />
+                      </div>
+                      <div className="ml-3">
+                        <p className="text-sm text-red-700">
+                          Gagal memuat data tiket: {error}
+                        </p>
+                        <button
+                          onClick={fetchTickets}
+                          className="mt-2 text-sm text-red-600 hover:text-red-500 font-medium"
+                        >
+                          Coba Lagi
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ) : loading ? (
+                  <div className="flex justify-center items-center h-64">
+                    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#7C4A00]"></div>
+                  </div>
+                ) : (
+                  <section className="max-w-6xl mx-auto px-4 grid grid-cols-1 md:grid-cols-3 gap-6 mb-20">
+                    {Object.entries(ticketGroups).map(([type, typeTickets]) => (
+                      <Card
+                        key={type}
+                        title={type}
+                        description={`Paket tiket ${type.toLowerCase()}`}
+                        items={typeTickets.map(ticket => ({
+                          label: ticket.code,
+                          price: `Rp ${ticket.price.toLocaleString('id-ID')}`,
+                          terms: ticket.terms
+                        }))}
+                        buttonText="Pesan Sekarang"
+                      />
+                    ))}
+                  </section>
+                )}
               </>
             )}
           </main>
@@ -280,22 +304,6 @@ export default function Home() {
             </div>
           </div>
 
-          <nav className="max-w-7xl mx-auto mt-6 px-4 sm:px-6 lg:px-8 text-center text-xs text-gray-600 space-x-4">
-            {[
-              "Beranda",
-              "Destination Info",
-              "Experiences",
-              "Venues",
-              "Agenda",
-              "News",
-              "Brosur",
-            ].map((item) => (
-              <a key={item} href="#" className="hover:text-gray-900">
-                {item}
-              </a>
-            ))}
-          </nav>
-
           <div className="max-w-7xl mx-auto mt-6 px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-3 gap-6 text-xs text-gray-700">
             <div>
               <p className="font-semibold mb-1">Contact Us</p>
@@ -337,11 +345,13 @@ function Card({ title, description, items, buttonText }) {
             <div className="flex-shrink-0 mt-1">
               <FaCheckCircle className="text-[#a3b04a]" />
             </div>
-            <p className="ml-2 text-xs text-gray-600">
-              {item.label}
-              <br />
-              <span className="font-bold text-gray-900">{item.price}</span>
-            </p>
+            <div className="ml-2">
+              <p className="text-xs text-gray-600">{item.label}</p>
+              <p className="font-bold text-gray-900">{item.price}</p>
+              {item.terms && (
+                <p className="text-xs text-gray-500 mt-1">{item.terms}</p>
+              )}
+            </div>
           </li>
         ))}
       </ul>

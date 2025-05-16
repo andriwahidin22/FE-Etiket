@@ -1,8 +1,10 @@
+//my-landing-page/pages/register.js
+
 import { useState } from "react";
 import Head from "next/head";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { useRouter } from "next/router";
-import Link from 'next/link';
+import Link from "next/link";
 
 export default function Register() {
   const router = useRouter();
@@ -65,7 +67,8 @@ export default function Register() {
         throw new Error(data.msg || "Registrasi gagal");
       }
 
-      router.push("/login?registered=true");
+      // Setelah registrasi sukses, arahkan ke halaman verifikasi email dengan userId dan email
+      router.push(`/verify-email?userId=${data.userId}&email=${encodeURIComponent(formData.email)}`);
 
     } catch (err) {
       setError(err.message);
@@ -80,7 +83,7 @@ export default function Register() {
         <meta name="description" content="Daftar akun Museum Lampung" />
       </Head>
 
-      {/* Custom White Header */}
+      {/* Header */}
       <header className="fixed top-0 left-0 w-full z-50 bg-white shadow-sm">
         <nav className="max-w-[1200px] mx-auto flex items-center justify-between px-8 py-4">
           <Link href="/" className="flex items-center">
@@ -119,12 +122,6 @@ export default function Register() {
             {error && (
               <div className="mb-4 p-3 bg-red-100 text-red-700 rounded text-sm">
                 {error}
-              </div>
-            )}
-
-            {router.query.registered && (
-              <div className="mb-4 p-3 bg-green-100 text-green-700 rounded text-sm">
-                Registrasi berhasil! Silakan login dengan akun Anda.
               </div>
             )}
 
@@ -197,6 +194,7 @@ export default function Register() {
                     type="button"
                     className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-[#7C4A00]"
                     onClick={togglePasswordVisibility}
+                    aria-label={showPassword ? "Sembunyikan password" : "Tampilkan password"}
                   >
                     {showPassword ? <FaEyeSlash className="h-5 w-5" /> : <FaEye className="h-5 w-5" />}
                   </button>
@@ -223,6 +221,7 @@ export default function Register() {
                     type="button"
                     className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-[#7C4A00]"
                     onClick={toggleConfirmPasswordVisibility}
+                    aria-label={showConfirmPassword ? "Sembunyikan konfirmasi password" : "Tampilkan konfirmasi password"}
                   >
                     {showConfirmPassword ? <FaEyeSlash className="h-5 w-5" /> : <FaEye className="h-5 w-5" />}
                   </button>
@@ -245,23 +244,9 @@ export default function Register() {
                 ) : "Daftar"}
               </button>
             </form>
-
-            <p className="text-center text-sm mt-6 text-gray-600">
-              Sudah punya akun?{' '}
-              <Link href="/login" className="font-medium text-[#7C4A00] hover:underline">
-                Masuk disini
-              </Link>
-            </p>
           </div>
         </div>
       </main>
-
-      {/* Simple Footer */}
-      <footer className="bg-white border-t border-gray-200 py-6">
-        <div className="max-w-[1200px] mx-auto px-8 text-center text-xs text-gray-500">
-          &copy; {new Date().getFullYear()} Museum Lampung. All rights reserved.
-        </div>
-      </footer>
     </>
   );
 }

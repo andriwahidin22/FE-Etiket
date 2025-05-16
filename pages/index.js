@@ -7,6 +7,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { FaTicketAlt, FaArrowRight, FaTimes } from "react-icons/fa";
 import MuseumHeader from "./components/common/MuseumHeader";
 import BuyTicketButton from "./components/common/BuyTicketButton";
+import RatingSystem from "./components/common/RatingSystem";
+import Cookies from 'js-cookie';
 
 // Data dummy untuk koleksi
 const dummyCollections = [
@@ -39,6 +41,7 @@ const dummyCollections = [
     image: "https://storage.googleapis.com/a1aa/image/1337f648-de50-4122-aba4-99a4f8af343a.jpg"
   }
 ];
+
 
 // Komponen Modal untuk Koleksi
 function CollectionModal({ collection, onClose }) {
@@ -341,6 +344,8 @@ export default function Home() {
 
         {/* Floating Buy Ticket Button */}
         <BuyTicketButton/>
+
+        <RatingSystem />  
 
         {/* Footer */}
         <footer className="bg-[#f9f9f9] border-t border-gray-300 pt-10 pb-4">

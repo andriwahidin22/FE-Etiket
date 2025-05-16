@@ -1,11 +1,10 @@
-// file: pages/login.js
-
 import { useState, useEffect } from "react";
 import Head from "next/head";
 import { FaEye, FaEyeSlash, FaGoogle } from "react-icons/fa";
 import { useRouter } from "next/router";
-import { setCookie, getCookie } from 'cookies-next';
-import Link from 'next/link';
+import { setCookie, getCookie } from "cookies-next";
+import Link from "next/link";
+import jwtDecode from "jwt-decode";
 
 export default function Login() {
   const router = useRouter();
@@ -13,37 +12,40 @@ export default function Login() {
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
 
-  // Cek apakah user sudah login (ada token)
-  const [isRedirecting, setIsRedirecting] = useState(false);
+  // Ambil token dan role dari cookie untuk cek apakah user sudah login
   const token = getCookie("token");
-  const role = getCookie("role"); // Jika kamu set role juga di cookie saat login
+  const role = getCookie("role");
 
   useEffect(() => {
-  
     if (token && role) {
-      const userRole = role.toUpperCase();
+      const userRole = role.toString().toUpperCase();
       if (userRole === "ADMIN") {
         router.replace("/admin");
       } else {
         router.replace("/");
       }
     }
-  }, [token,role]);
-  
-  
-  if (isRedirecting) return null; // atau spinner
-  
+  }, [token, role, router]);
 
+  // Fungsi toggle visibility password
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
   };
 
+  // Fungsi handle perubahan input form
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  // Fungsi handle checkbox "Ingat saya"
+  const handleRememberMeChange = (e) => {
+    setRememberMe(e.target.checked);
+  };
+
+  // Fungsi submit form login
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -62,31 +64,48 @@ export default function Login() {
         throw new Error(data.msg || "Login gagal");
       }
 
-      if (!data.response.token) {
+      // Ambil token dan role dari respons
+      const tokenValue = data.token || data.response?.token || data.data?.token;
+      const roleValue = data.role || data.response?.role || data.data?.role;
+
+      if (!tokenValue) {
         throw new Error("Token tidak ditemukan di respons server.");
       }
 
-      // Set cookie token
-      setCookie("token", data.response.token, {
-        maxAge: 60 * 60 * 24, // 1 hari
+      // Set cookie token dan role
+      const maxAge = rememberMe ? 60 * 60 * 24 * 7 : 60 * 60 * 24; // detik
+
+      setCookie("token", tokenValue, {
+        maxAge,
         path: "/",
       });
 
-      // Role-based redirect
-      const userRole = (data.response.role || "").toUpperCase();
+      if (roleValue) {
+        setCookie("role", roleValue, {
+          maxAge,
+          path: "/",
+        });
+      }
+
+      // Redirect berdasarkan role
+      const userRole = roleValue ? roleValue.toString().toUpperCase() : "";
       if (userRole === "ADMIN") {
         router.push("/admin");
       } else if (userRole === "USER") {
         router.push("/");
       } else {
-        router.push("/");2
+        router.push("/");
       }
-
     } catch (err) {
       setError(err.message);
     } finally {
       setLoading(false);
     }
+  };
+
+  // Fungsi login dengan Google (redirect ke backend OAuth)
+  const handleGoogleLogin = () => {
+    window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/api/auth/google`;
   };
 
   return (
@@ -170,18 +189,22 @@ export default function Login() {
                     type="button"
                     className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-[#7C4A00]"
                     onClick={togglePasswordVisibility}
+                    aria-label={showPassword ? "Sembunyikan password" : "Tampilkan password"}
                   >
                     {showPassword ? <FaEyeSlash className="h-5 w-5" /> : <FaEye className="h-5 w-5" />}
                   </button>
                 </div>
               </div>
 
+              {/* Remember Me Checkbox and Forgot Password Link */}
               <div className="flex justify-between items-center">
                 <div className="flex items-center">
                   <input
                     type="checkbox"
                     id="remember"
                     className="h-4 w-4 text-[#7C4A00] focus:ring-[#7C4A00] border-gray-300 rounded"
+                    checked={rememberMe}
+                    onChange={handleRememberMeChange}
                   />
                   <label htmlFor="remember" className="ml-2 block text-xs text-gray-600">
                     Ingat saya
@@ -192,6 +215,7 @@ export default function Login() {
                 </Link>
               </div>
 
+              {/* Submit Button */}
               <button
                 type="submit"
                 disabled={loading}
@@ -209,19 +233,24 @@ export default function Login() {
               </button>
             </form>
 
+            {/* Divider */}
             <div className="flex items-center my-6">
               <div className="flex-grow border-t border-gray-300"></div>
               <span className="mx-4 text-sm text-gray-500">atau</span>
               <div className="flex-grow border-t border-gray-300"></div>
             </div>
 
+            {/* Google Login Button */}
             <button
+              onClick={handleGoogleLogin}
               className="w-full border border-gray-300 text-gray-700 py-2 rounded-md text-sm font-medium hover:bg-gray-50 transition flex items-center justify-center gap-2"
+              type="button"
             >
               <FaGoogle className="text-[#DB4437]" />
               Masuk dengan Google
             </button>
 
+            {/* Register Link */}
             <p className="text-center text-sm mt-6 text-gray-600">
               Belum punya akun?{" "}
               <Link href="/register" className="font-medium text-[#7C4A00] hover:underline">
